@@ -55,7 +55,7 @@ public class BarberoController {
        {
         "personaId": 1, [Antes crear persona]
         "experiencia": 3,
-        "estado": "ACTIVO"
+        "ocupado": false
        }
     * */
 
