@@ -14,5 +14,5 @@ public class BarberoResponseDTO {
     private Persona persona;
     private Integer experiencia;
     private LocalDate fechaIngreso;
-    private String estado;
+    private boolean ocupado;
 }

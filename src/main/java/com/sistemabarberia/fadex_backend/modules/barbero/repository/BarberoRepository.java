@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BarberoRepository extends JpaRepository<Barbero,Integer>{
 
+    //Comprobar existencia de Persona
+    boolean existsByPersona_PersonaId(Integer personaId);
 }

@@ -27,4 +27,13 @@ public class Cliente {
 
     @Column(name = "fecha_registro")
     private LocalDate fechaRegistro;
+
+
+
+    @PrePersist   //Si Fecha Registro es null lo pondra automaticamente
+    public void prePersist() {
+        if (this.fechaRegistro == null) {
+            this.fechaRegistro = LocalDate.now();
+        }
+    }
 }
