@@ -77,7 +77,7 @@ public class BarberoController {
     /*
       {
         "experiencia": 5,
-        "estado": "ACTIVO"  --> O INACTIVO
+        "ocupado": false  --> O true 
       }
      */
 
