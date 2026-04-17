@@ -29,7 +29,14 @@ public class Barbero {
     private Integer experiencia;
     @Column(name = "fecha_ingreso")
     private LocalDate fechaIngreso;
-    @Column(name = "estado")
-    private String estado;
+    @Column(name = "ocupado")
+    private boolean ocupado;
 
+
+    @PrePersist   //Si Fecha Ingreso es null lo pondra automaticamente
+    public void prePersist() {
+        if (this.fechaIngreso == null) {
+            this.fechaIngreso = LocalDate.now();
+        }
+    }
 }

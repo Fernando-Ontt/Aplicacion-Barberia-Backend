@@ -5,10 +5,10 @@ VALUES
     ('Carlos', 'Ramirez', '998877665', 'carlos@gmail.com'),
     ('Ana', 'Torres', '955443322', 'ana@gmail.com');
 
-INSERT INTO barbero (id_persona, experiencia, fecha_ingreso, estado)
+INSERT INTO barbero (id_persona, experiencia, fecha_ingreso,ocupado)
 VALUES
-    (1, 5, '2022-03-15', 'Activo'),
-    (2, 3, '2023-07-10', 'Activo');
+    (1, 5, '2022-03-15',false),
+    (2, 3, '2023-07-10',false);
 
 INSERT INTO cliente (id_persona, fecha_registro)
 VALUES

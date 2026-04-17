@@ -4,15 +4,15 @@ CREATE TABLE barbero (
                          id_persona INT,
                          experiencia INT,
                          fecha_ingreso DATE,
-                         estado VARCHAR(20),
-                         FOREIGN KEY (id_persona) REFERENCES persona(id_persona)
+                         ocupado BOOLEAN,
+                         FOREIGN KEY (id_persona) REFERENCES persona(id_persona) ON DELETE CASCADE
 );
 
 CREATE TABLE cliente (
                          id_cliente SERIAL PRIMARY KEY,
                          id_persona INT,
                          fecha_registro DATE,
-                         FOREIGN KEY (id_persona) REFERENCES persona(id_persona)
+                         FOREIGN KEY (id_persona) REFERENCES persona(id_persona) ON DELETE CASCADE
 );
 
 CREATE TABLE recompensa (

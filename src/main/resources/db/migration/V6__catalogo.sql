@@ -1,7 +1,9 @@
 
 CREATE TABLE categoria (
                            id_categoria SERIAL PRIMARY KEY,
-                           nombre VARCHAR(100)
+                           nombre VARCHAR(100),
+                           id_padre int  NULL ,
+                           FOREIGN KEY (id_padre) REFERENCES categoria(id_categoria)
 );
 
 CREATE TABLE cortes (
@@ -18,6 +20,6 @@ CREATE TABLE producto (
                           precio DECIMAL(10,2),
                           stock INT,
                           id_categoria INT,
-                          estado VARCHAR(20),
+                          estado BOOLEAN,
                           FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
