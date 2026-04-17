@@ -1,0 +1,65 @@
+{
+  "info": {
+    "_postman_id": "49d0ba1e-53c1-4b6f-93d4-45b465155757",
+    "name": "Fedex",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53654669",
+    "_collection_link": "https://go.postman.co/collection/53654669-49d0ba1e-53c1-4b6f-93d4-45b465155757?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Barbero",
+      "item": [
+        {
+          "name": "GET",
+          "item": [
+            {
+              "name": "listarBarberos",
+              "request": {
+                "auth": {
+                  "type": "basic",
+                  "basic": [
+                    {
+                      "key": "password",
+                      "value": "1234",
+                      "type": "string"
+                    },
+                    {
+                      "key": "username",
+                      "value": "admin",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8080/barberos?page=0&size=5",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "barberos"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "size",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
