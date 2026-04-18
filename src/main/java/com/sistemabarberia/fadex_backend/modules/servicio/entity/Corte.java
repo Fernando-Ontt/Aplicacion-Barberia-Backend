@@ -1,0 +1,32 @@
+package com.sistemabarberia.fadex_backend.modules.servicio.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+
+@Entity
+@Table(name = "cortes")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Corte {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_corte")
+    private Integer corteId;
+
+    @Column(name = "nombre", length = 100)
+    private String nombre;
+
+    @Column(name = "precio")
+    private BigDecimal precio;
+
+    @ManyToOne
+    @JoinColumn(name = "id_categoria")
+    private Categoria categoria;
+
+}
