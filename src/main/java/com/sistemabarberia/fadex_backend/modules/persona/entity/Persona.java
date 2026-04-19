@@ -1,5 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.persona.entity;
 
+import com.sistemabarberia.fadex_backend.modules.seguridad.entity.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,6 +17,12 @@ public class Persona {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_persona")
     private Integer personaId;
+
+    //@ManyToOne(fetch = FetchType.EAGER)
+    //@JoinColumn(name = "id_usuario")
+
+    @Column(name = "id_usuario")
+    private Integer usuarioId;
 
     @Column(name = "nombre")
     private String nombre;
