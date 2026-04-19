@@ -32,7 +32,7 @@ public class PersonaController {
     ) {
         Pageable pageable = PageRequest.of(page, size);
         Page<PersonaResponseDTO> result = personaService.listarPersonas(pageable);
-        return ResponseEntity.ok(ApiResponse.ok("Clientes obtenidos correctamente", result));
+        return ResponseEntity.ok(ApiResponse.ok("Personas obtenidos correctamente", result));
     }
 
     //Buscar
