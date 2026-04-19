@@ -37,4 +37,13 @@ public class  ApiResponse<T> {
         response.setTimestamp(LocalDateTime.now().toString());
         return response;
     }
+
+    public static ApiResponse<Void> ok(String message) {
+        ApiResponse<Void> response = new ApiResponse<>();
+        response.setSuccess(true);
+        response.setMessage(message);
+        response.setData(null);
+        response.setTimestamp(LocalDateTime.now().toString());
+        return response;
+    }
 }

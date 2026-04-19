@@ -1,4 +1,5 @@
 package com.sistemabarberia.fadex_backend.modules.seguridad.entity;
+import com.sistemabarberia.fadex_backend.modules.persona.entity.Persona;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,4 +28,8 @@ public class Usuario {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_rol")
     private Rol rol;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_persona")
+    private Persona persona;
 }
