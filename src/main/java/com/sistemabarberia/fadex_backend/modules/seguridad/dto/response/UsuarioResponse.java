@@ -11,5 +11,4 @@ public class UsuarioResponse {
     private Integer idUsuario;
     private String username;
     private String rol;
-    private Persona persona;
 }

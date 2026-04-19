@@ -55,7 +55,7 @@ class PersonaControllerTest {
     void deberiaListarPersonas() throws Exception {
         // GIVEN
         PersonaResponseDTO dto = PersonaResponseDTO.builder() //se crea una solicitud dto builder pide simular los datos siguientes
-                .personaId(1).nombre("Juan").apellido("Pérez")
+                .personaId(1).usuarioId(1).nombre("Juan").apellido("Pérez")
                 .telefono("987654321").email("juan@gmail.com") //datos simulados que estaran en memoria
                 .build();
 
@@ -86,6 +86,7 @@ class PersonaControllerTest {
     void deberiaCrearPersona() throws Exception {
         // GIVEN
         PersonaRequestDTO request = new PersonaRequestDTO();
+        request.setUsuarioId(1);
         request.setNombre("Juan");
         request.setApellido("Pérez");
         request.setTelefono("987654321");

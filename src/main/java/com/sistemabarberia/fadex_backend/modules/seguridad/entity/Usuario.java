@@ -29,7 +29,4 @@ public class Usuario {
     @JoinColumn(name = "id_rol")
     private Rol rol;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_persona")
-    private Persona persona;
 }

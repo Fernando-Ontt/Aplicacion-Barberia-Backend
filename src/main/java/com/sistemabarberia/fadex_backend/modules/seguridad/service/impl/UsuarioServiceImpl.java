@@ -24,7 +24,6 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
-    private final PersonaRepository personaRepository;
 
     @Override
     public Page<UsuarioResponse> getAll(Pageable pageable) {
@@ -68,7 +67,6 @@ public class UsuarioServiceImpl implements IUsuarioService {
                 .idUsuario(usuario.getIdUsuario())
                 .username(usuario.getUser())
                 .rol(usuario.getRol().getNombre())
-                .persona(usuario.getPersona())
                 .build();
     }
     @Override
@@ -80,14 +78,11 @@ public class UsuarioServiceImpl implements IUsuarioService {
         Rol rol = rolRepository.findById(request.getIdRol())
                 .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
 
-        Persona persona = personaRepository.findById(request.getIdPersona())
-                .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
 
         Usuario usuario = Usuario.builder()
                 .user(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .rol(rol)
-                .persona(persona)
                 .build();
 
         return toResponse(usuarioRepository.save(usuario));
