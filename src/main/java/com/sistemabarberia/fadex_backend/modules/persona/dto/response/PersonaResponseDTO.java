@@ -1,6 +1,7 @@
 package com.sistemabarberia.fadex_backend.modules.persona.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sistemabarberia.fadex_backend.modules.seguridad.entity.Usuario;
 import lombok.Builder;
 import lombok.Data;
 
