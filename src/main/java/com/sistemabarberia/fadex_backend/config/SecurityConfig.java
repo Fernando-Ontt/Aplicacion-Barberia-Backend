@@ -26,7 +26,15 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/usuarios/**").permitAll()
+                                .requestMatchers("/barberos/**").permitAll()
+                                .requestMatchers("/clientes/**").permitAll()
+                                .requestMatchers("/personas/**").permitAll()
+                                .requestMatchers("/api/v1/categorias/**").permitAll()
+                                .requestMatchers("/api/v1/cortes/**").permitAll()
+                                .requestMatchers("/api/v1/ventas/**").permitAll()
                                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                                .requestMatchers("/api/test/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
