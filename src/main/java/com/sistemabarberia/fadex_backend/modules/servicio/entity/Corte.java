@@ -1,5 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.servicio.entity;
 
+import com.sistemabarberia.fadex_backend.modules.categoria.entity.Categoria;
 import jakarta.persistence.*;
 import lombok.*;
 

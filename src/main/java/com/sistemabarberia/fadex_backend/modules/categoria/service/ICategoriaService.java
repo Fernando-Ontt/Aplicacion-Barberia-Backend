@@ -1,0 +1,13 @@
+package com.sistemabarberia.fadex_backend.modules.categoria.service;
+
+import com.sistemabarberia.fadex_backend.modules.categoria.dto.CategoriaFiltro;
+import com.sistemabarberia.fadex_backend.modules.categoria.dto.request.CategoriaRequestDTO;
+import com.sistemabarberia.fadex_backend.modules.categoria.dto.response.CategoriaResponseDTO;
+
+import java.util.List;
+
+public interface ICategoriaService {
+    List<CategoriaResponseDTO> listar();
+    List<CategoriaResponseDTO> listarConFiltro(CategoriaFiltro filtro);
+    CategoriaResponseDTO obtenerPorId(Long id);
+}
