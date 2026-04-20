@@ -39,7 +39,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.flyway.enabled=false" //Inhabilita el flyway para que pueda correr
         // sin la bd del servidor creando sus propios datos en memoria usando H2 (BD simulada en Ram)
 })
-
 class PersonaControllerTest {
 
     @Autowired
@@ -68,47 +67,51 @@ class PersonaControllerTest {
                 .andExpect(jsonPath("$.data.content[0].nombre").value("Juan")); //Verifica el JSON de respuesta
     }
 
+
+
     @Test
     void deberiaBuscarPersonaPorId() throws Exception {
         // GIVEN
-        PersonaResponseDTO dto = PersonaResponseDTO.builder()
-                .personaId(1).nombre("Juan").build();
+        PersonaResponseDTO dto = PersonaResponseDTO.builder() //Creas un objeto dto donde estara un dato simulado
+                .personaId(1).nombre("Juan").build();  //creas dato simulado
 
-        when(personaService.buscarPersona(1)).thenReturn(dto);
+        when(personaService.buscarPersona(1)).thenReturn(dto); //cuando el servicio buscarPersona encuentre 1
+        // retornanra el dto buscado osea los datos simulados
 
         // WHEN + THEN
-        mockMvc.perform(get("/personas/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.nombre").value("Juan"));
+        mockMvc.perform(get("/personas/1")) //simula peticion http
+                .andExpect(status().isOk()) //Verifica que la respuesta HTTP tenga código 200 OK
+                .andExpect(jsonPath("$.data.nombre").value("Juan"));  //Verifica que en el JSON de respuesta, dentro de data.nombre,
+        // el valor sea "Juan"
     }
 
     @Test
     void deberiaCrearPersona() throws Exception {
         // GIVEN
-        PersonaRequestDTO request = new PersonaRequestDTO();
+        PersonaRequestDTO request = new PersonaRequestDTO();//Estás creando el objeto que simula el JSON que enviará el cliente
         request.setUsuarioId(1);
         request.setNombre("Juan");
-        request.setApellido("Pérez");
+        request.setApellido("Pérez"); //Simula lo que el cliente enviara al Body
         request.setTelefono("987654321");
         request.setEmail("juan@gmail.com");
 
-        PersonaResponseDTO response = PersonaResponseDTO.builder()
+        PersonaResponseDTO response = PersonaResponseDTO.builder() //Simulas la respuesta que devolverá el service cuando se cree la persona
                 .personaId(1).nombre("Juan").build();
 
-        when(personaService.crearPersona(any())).thenReturn(response);
+        when(personaService.crearPersona(any())).thenReturn(response); //Estás evitando ejecutar la lógica real y forzando un resultado controlado
 
         // WHEN + THEN
-        mockMvc.perform(post("/personas")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.data.personaId").value(1));
+        mockMvc.perform(post("/personas") //Simula una petición HTTP POST al endpoint /personas
+                        .contentType(MediaType.APPLICATION_JSON)//post de tipo json
+                        .content(objectMapper.writeValueAsString(request)))//Convierte el objeto request a JSON para enviarlo como body
+                .andExpect(status().isCreated()) //estatus de respuesta
+                .andExpect(jsonPath("$.data.personaId").value(1)); //Verifica que en la respuesta JSON, dentro de data.personaId, el valor sea 1
     }
 
     @Test
     void deberiaEliminarPersona() throws Exception {
         // GIVEN
-        PersonaResponseDTO response = PersonaResponseDTO.builder()
+        PersonaResponseDTO response = PersonaResponseDTO.builder() //Crea un objeto response como respuesta
                 .personaId(1).nombre("Juan").build();
 
         when(personaService.eliminar(1)).thenReturn(response);
