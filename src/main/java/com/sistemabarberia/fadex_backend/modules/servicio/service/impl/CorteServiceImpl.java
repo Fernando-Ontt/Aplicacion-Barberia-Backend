@@ -2,10 +2,10 @@ package com.sistemabarberia.fadex_backend.modules.servicio.service.impl;
 
 import com.sistemabarberia.fadex_backend.modules.servicio.dto.request.CorteRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.servicio.dto.response.CorteResponseDTO;
-import com.sistemabarberia.fadex_backend.modules.servicio.entity.Categoria;
+import com.sistemabarberia.fadex_backend.modules.categoria.entity.Categoria;
 import com.sistemabarberia.fadex_backend.modules.servicio.entity.Corte;
 import com.sistemabarberia.fadex_backend.modules.servicio.mapper.CorteMapper;
-import com.sistemabarberia.fadex_backend.modules.servicio.repository.CategoriaRepository;
+import com.sistemabarberia.fadex_backend.modules.categoria.repository.CategoriaRepository;
 import com.sistemabarberia.fadex_backend.modules.servicio.repository.CorteRepository;
 import com.sistemabarberia.fadex_backend.modules.servicio.service.ICorteService;
 import lombok.RequiredArgsConstructor;
