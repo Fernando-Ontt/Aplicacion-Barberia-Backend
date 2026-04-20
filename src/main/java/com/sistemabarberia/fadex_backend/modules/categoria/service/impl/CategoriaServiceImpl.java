@@ -2,6 +2,7 @@ package com.sistemabarberia.fadex_backend.modules.categoria.service.impl;
 
 import com.sistemabarberia.fadex_backend.commons.exception.BusinessException;
 import com.sistemabarberia.fadex_backend.modules.categoria.dto.CategoriaFiltro;
+import com.sistemabarberia.fadex_backend.modules.categoria.dto.request.CategoriaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.categoria.dto.response.CategoriaResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.categoria.entity.Categoria;
 import com.sistemabarberia.fadex_backend.modules.categoria.mapper.CategoriaMapper;
@@ -46,6 +47,37 @@ public class CategoriaServiceImpl implements ICategoriaService {
             return mapa.get(categoria.getPadre().getId());
         }
         return mapa.get(id);
+    }
+
+    @Override
+    public CategoriaResponseDTO crear(CategoriaRequestDTO dto) {
+        if (dto.getPadreId() == null) {
+            if (categoriaRepository.existsByNombreIgnoreCaseAndPadreIsNullAndEstadoTrue(dto.getNombre())) {
+                throw new BusinessException("La categoría ya existe en nivel raíz", HttpStatus.BAD_REQUEST);
+            }
+        } else {
+            if (categoriaRepository.existsByNombreIgnoreCaseAndPadreIdAndEstadoTrueAndTipo(
+                    dto.getNombre(), dto.getPadreId(), dto.getTipo())) {
+                throw new BusinessException("La categoría ya existe en esta categoría padre", HttpStatus.BAD_REQUEST);
+            }
+        }
+        Categoria categoria = new Categoria();
+        categoria.setNombre(dto.getNombre());
+        categoria.setDescripcion(dto.getDescripcion());
+        categoria.setEstado(dto.getEstado() != null ? dto.getEstado() : true);
+        categoria.setTipo(dto.getTipo());
+        if (dto.getPadreId() != null) {
+            Categoria padre = categoriaRepository.findById(dto.getPadreId())
+                    .orElseThrow(() -> new BusinessException("La categoría padre no existe", HttpStatus.NOT_FOUND));
+            if (!padre.isEstado()) {
+                throw new BusinessException("La categoría padre está inactiva", HttpStatus.BAD_REQUEST);
+            }
+            if (!padre.getTipo().equals(dto.getTipo())) {
+                throw new BusinessException("El tipo debe coincidir con la categoría padre", HttpStatus.BAD_REQUEST);
+            }
+            categoria.setPadre(padre);
+        }
+        return categoriaMapper.toResponse(categoriaRepository.save(categoria));
     }
 
     private Map<Long, CategoriaResponseDTO> construirArbol() {

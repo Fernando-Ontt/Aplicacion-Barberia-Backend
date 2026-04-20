@@ -32,4 +32,12 @@ public class CategoriaController {
         return ResponseEntity.ok(ApiResponse.ok("Categoría encontrada", data));
     }
 
+    @PostMapping
+    public ResponseEntity<ApiResponse<CategoriaResponseDTO>> crear(@Valid @RequestBody CategoriaRequestDTO dto) {
+        CategoriaResponseDTO data = categoriaService.crear(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Categoría creada correctamente", data));
+    }
+
+
+
 }

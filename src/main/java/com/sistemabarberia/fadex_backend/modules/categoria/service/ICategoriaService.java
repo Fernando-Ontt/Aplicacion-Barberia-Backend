@@ -10,4 +10,5 @@ public interface ICategoriaService {
     List<CategoriaResponseDTO> listar();
     List<CategoriaResponseDTO> listarConFiltro(CategoriaFiltro filtro);
     CategoriaResponseDTO obtenerPorId(Long id);
+    CategoriaResponseDTO crear(CategoriaRequestDTO dto);
 }
