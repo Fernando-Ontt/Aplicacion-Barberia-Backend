@@ -80,6 +80,55 @@ public class CategoriaServiceImpl implements ICategoriaService {
         return categoriaMapper.toResponse(categoriaRepository.save(categoria));
     }
 
+    @Override
+    public CategoriaResponseDTO actualizar(Long id, CategoriaRequestDTO dto) {
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
+
+        boolean cambioNombre = !categoria.getNombre().equalsIgnoreCase(dto.getNombre());
+
+        if (cambioNombre) {
+            if (dto.getPadreId() == null) {
+                if (categoriaRepository.existsByNombreIgnoreCaseAndPadreIsNullAndEstadoTrue(dto.getNombre())) {
+                    throw new BusinessException("La categoría ya existe en nivel raíz", HttpStatus.BAD_REQUEST);
+                }
+            } else {
+                if (categoriaRepository.existsByNombreIgnoreCaseAndPadreIdAndEstadoTrueAndTipo(
+                        dto.getNombre(), dto.getPadreId(), dto.getTipo())) {
+                    throw new BusinessException("La categoría ya existe en esta categoría padre", HttpStatus.BAD_REQUEST);
+                }
+            }
+        }
+
+        categoria.setNombre(dto.getNombre());
+        categoria.setDescripcion(dto.getDescripcion());
+        categoria.setEstado(dto.getEstado() != null ? dto.getEstado() : categoria.isEstado());
+        categoria.setTipo(dto.getTipo());
+
+        if (dto.getPadreId() != null) {
+            Categoria padre = categoriaRepository.findById(dto.getPadreId())
+                    .orElseThrow(() -> new BusinessException("La categoría padre no existe", HttpStatus.NOT_FOUND));
+            if (!padre.isEstado()) {
+                throw new BusinessException("La categoría padre está inactiva", HttpStatus.BAD_REQUEST);
+            }
+            categoria.setPadre(padre);
+        } else {
+            categoria.setPadre(null);
+        }
+        return categoriaMapper.toResponse(categoriaRepository.save(categoria));
+    }
+
+    @Override
+    public CategoriaResponseDTO cambiarEstado(Long id, Boolean estado) {
+        System.out.println("ID recibido => " + id);
+        System.out.println("Estado recibido => " + estado);
+
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
+        categoria.setEstado(estado);
+        return categoriaMapper.toResponse(categoriaRepository.save(categoria));
+    }
+
     private Map<Long, CategoriaResponseDTO> construirArbol() {
         List<Categoria> categorias = categoriaRepository.findByEstadoTrue();
         List<CategoriaResponseDTO> dtos = categoriaMapper.toResponseList(categorias);

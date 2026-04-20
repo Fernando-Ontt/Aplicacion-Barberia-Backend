@@ -38,6 +38,15 @@ public class CategoriaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Categoría creada correctamente", data));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<CategoriaResponseDTO>> actualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequestDTO dto) {
+        CategoriaResponseDTO data = categoriaService.actualizar(id, dto);
+        return ResponseEntity.ok(ApiResponse.ok("Categoría actualizada correctamente", data));
+    }
 
-
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<ApiResponse<CategoriaResponseDTO>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean estado) {
+        CategoriaResponseDTO data = categoriaService.cambiarEstado(id, estado);
+        return ResponseEntity.ok(ApiResponse.ok("Estado actualizado correctamente", data));
+    }
 }
