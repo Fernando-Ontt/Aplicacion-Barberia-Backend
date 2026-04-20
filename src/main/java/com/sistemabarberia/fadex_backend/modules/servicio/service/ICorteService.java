@@ -11,11 +11,11 @@ public interface ICorteService {
 
     List<CorteResponseDTO> listar();
 
-    List<CorteResponseDTO> listarPorCategoria(Integer categoriaId);
+    List<CorteResponseDTO> listarPorCategoria(Long categoriaId);
 
-    CorteResponseDTO obtenerPorId(Integer id);
+    CorteResponseDTO obtenerPorId(Long id);
 
-    CorteResponseDTO actualizar(Integer id, CorteRequestDTO dto);
+    CorteResponseDTO actualizar(Long id, CorteRequestDTO dto);
 
-    void eliminar(Integer id);
+    void eliminar(Long id);
 }
