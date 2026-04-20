@@ -129,6 +129,14 @@ public class CategoriaServiceImpl implements ICategoriaService {
         return categoriaMapper.toResponse(categoriaRepository.save(categoria));
     }
 
+    @Override
+    public void eliminar(Long id) {
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
+        categoria.setEstado(false);
+        categoriaRepository.save(categoria);
+    }
+
     private Map<Long, CategoriaResponseDTO> construirArbol() {
         List<Categoria> categorias = categoriaRepository.findByEstadoTrue();
         List<CategoriaResponseDTO> dtos = categoriaMapper.toResponseList(categorias);

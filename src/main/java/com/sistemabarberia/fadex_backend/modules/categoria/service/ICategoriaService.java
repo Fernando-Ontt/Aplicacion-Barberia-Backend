@@ -13,4 +13,5 @@ public interface ICategoriaService {
     CategoriaResponseDTO crear(CategoriaRequestDTO dto);
     CategoriaResponseDTO actualizar(Long id, CategoriaRequestDTO dto);
     CategoriaResponseDTO cambiarEstado(Long id, Boolean estado);
+    void eliminar(Long id);
 }

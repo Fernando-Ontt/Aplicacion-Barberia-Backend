@@ -18,7 +18,7 @@ public class Corte {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_corte")
-    private Integer corteId;
+    private Long corteId;
 
     @Column(name = "nombre", length = 100)
     private String nombre;

@@ -49,4 +49,10 @@ public class CategoriaController {
         CategoriaResponseDTO data = categoriaService.cambiarEstado(id, estado);
         return ResponseEntity.ok(ApiResponse.ok("Estado actualizado correctamente", data));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
+        categoriaService.eliminar(id);
+        return ResponseEntity.ok(ApiResponse.ok("Categoría eliminada correctamente", null));
+    }
 }

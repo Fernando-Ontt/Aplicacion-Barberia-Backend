@@ -11,7 +11,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface CategoriaMapper {
 
-    @Mapping(target = "categoriaId", ignore = true)
+    @Mapping(target = "id", ignore = true)
     Categoria toEntity(CategoriaRequestDTO dto);
 
     @Mapping(target = "padreId", source = "padre.id")
