@@ -66,6 +66,29 @@ public class ProductoService implements IProductoService {
         return productoMapper.toResponse(guardado);
     }
 
+    @Override
+    public ProductoResponse actualizarProducto(Long id, ProductoRequest request, List<MultipartFile> archivos) {
+        Producto producto = productoRepository.findById(id).orElseThrow(() ->new BusinessException("Producto no encontrado",HttpStatus.NOT_FOUND));
+        Categoria categoria = categoriaRepository.findById(request.getIdCategoria()).orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.BAD_REQUEST));
+        productoMapper.updateFromRequest(request, producto);
+        producto.setCategoria(categoria);
+        List<MultipartFile> archivosValidos = filtrarArchivosNoVacios(archivos);
+
+        if (!archivosValidos.isEmpty()) {
+            for (String url : producto.getUrlsMultimedia()) {
+                fileStorageService.eliminarArchivo(url);
+            }
+            List<String> nuevasUrls = new ArrayList<>();
+            for (MultipartFile file : archivosValidos) {
+                validarArchivoImagen(file);
+                String url = fileStorageService.guardarArchivo(file, "productos", TIPOS_IMAGEN);
+                nuevasUrls.add(url);
+            }
+            producto.setUrlsMultimedia(nuevasUrls);
+        }
+        return productoMapper.toResponse(productoRepository.save(producto));
+    }
+
     private void validarArchivoImagen(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("Archivo vacío", HttpStatus.BAD_REQUEST);

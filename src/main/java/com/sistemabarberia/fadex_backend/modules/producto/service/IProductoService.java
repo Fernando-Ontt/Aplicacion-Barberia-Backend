@@ -13,4 +13,5 @@ public interface IProductoService {
     PageResponse<ProductoResponse> listarProductoFiltros(ProductoFiltro filtro, Pageable pageable);
     ProductoResponse obtenerProductoPorId(Long id);
     ProductoResponse crearProducto(ProductoRequest request, List<MultipartFile> archivos);
+    ProductoResponse actualizarProducto(Long id, ProductoRequest request, List<MultipartFile> archivos);
 }

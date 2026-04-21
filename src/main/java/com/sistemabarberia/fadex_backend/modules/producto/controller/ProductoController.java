@@ -40,4 +40,10 @@ public class ProductoController {
         ProductoResponse producto = productoService.crearProducto(request, archivos);
         return ResponseEntity.ok(ApiResponse.ok("Producto creado correctamente", producto));
     }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ProductoResponse>> actualizar(@PathVariable Long id, @RequestPart("producto") ProductoRequest request, @RequestPart(value = "archivos", required = false) List<MultipartFile> archivos) {
+        ProductoResponse producto = productoService.actualizarProducto(id, request, archivos);
+        return ResponseEntity.ok(ApiResponse.ok("Producto actualizado correctamente", producto));
+    }
 }
