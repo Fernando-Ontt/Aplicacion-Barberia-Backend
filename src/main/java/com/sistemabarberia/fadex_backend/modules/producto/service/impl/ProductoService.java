@@ -46,4 +46,45 @@ public class ProductoService implements IProductoService {
         return productoMapper.toResponse(producto);
     }
 
+    @Override
+    public ProductoResponse crearProducto(ProductoRequest request, List<MultipartFile> archivos)  {
+        Categoria categoria = categoriaRepository.findById(request.getIdCategoria()).orElseThrow(() -> new BusinessException("La categoría con ID " + request.getIdCategoria() + " no existe",HttpStatus.BAD_REQUEST));
+        Producto producto = productoMapper.toEntity(request);
+        producto.setCategoria(categoria);
+        List<String> urls = new ArrayList<>();
+        List<MultipartFile> archivosValidos = filtrarArchivosNoVacios(archivos);
+
+        if (!archivosValidos.isEmpty()) {
+            for (MultipartFile file : archivosValidos) {
+                validarArchivoImagen(file);
+                String url = fileStorageService.guardarArchivo(file, "productos", TIPOS_IMAGEN);
+                urls.add(url);
+            }
+        }
+        producto.setUrlsMultimedia(urls);
+        Producto guardado = productoRepository.save(producto);
+        return productoMapper.toResponse(guardado);
+    }
+
+    private void validarArchivoImagen(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("Archivo vacío", HttpStatus.BAD_REQUEST);
+        }
+        if (!TIPOS_IMAGEN.contains(file.getContentType())) {
+            throw new BusinessException("Formato no permitido: " + file.getContentType(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private List<MultipartFile> filtrarArchivosNoVacios(List<MultipartFile> archivos) {
+        if (archivos == null || archivos.isEmpty()) {
+            return List.of();
+        }
+        List<MultipartFile> archivosValidos = new ArrayList<>();
+        for (MultipartFile archivo : archivos) {
+            if (archivo != null && !archivo.isEmpty()) {
+                archivosValidos.add(archivo);
+            }
+        }
+        return archivosValidos;
+    }
 }

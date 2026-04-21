@@ -34,4 +34,10 @@ public class ProductoController {
         ProductoResponse producto = productoService.obtenerProductoPorId(id);
         return ResponseEntity.ok(ApiResponse.ok("Producto obtenido correctamente", producto));
     }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ProductoResponse>> crear(@RequestPart("producto") ProductoRequest request, @RequestPart(value = "archivos", required = false) List<MultipartFile> archivos) {
+        ProductoResponse producto = productoService.crearProducto(request, archivos);
+        return ResponseEntity.ok(ApiResponse.ok("Producto creado correctamente", producto));
+    }
 }
