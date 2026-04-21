@@ -31,10 +31,12 @@ public class SecurityConfig {
                                 .requestMatchers("/clientes/**").permitAll()
                                 .requestMatchers("/personas/**").permitAll()
                                 .requestMatchers("/api/v1/categorias/**").permitAll()
+                                .requestMatchers("/api/v1/productos/**").permitAll()
                                 .requestMatchers("/api/v1/cortes/**").permitAll()
                                 .requestMatchers("/api/v1/ventas/**").permitAll()
                                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                                 .requestMatchers("/api/test/**").permitAll()
+                                .requestMatchers("/uploads/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
