@@ -46,4 +46,11 @@ public class ProductoController {
         ProductoResponse producto = productoService.actualizarProducto(id, request, archivos);
         return ResponseEntity.ok(ApiResponse.ok("Producto actualizado correctamente", producto));
     }
+
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<ApiResponse<Boolean>> cambiarEstado(@PathVariable Long id, @RequestParam boolean estado) {
+        ProductoResponse producto = productoService.cambiarEstadoProducto(id, estado);
+        return ResponseEntity.ok(ApiResponse.ok("Estado actualizado correctamente", estado));
+    }
+
 }

@@ -89,6 +89,14 @@ public class ProductoService implements IProductoService {
         return productoMapper.toResponse(productoRepository.save(producto));
     }
 
+    @Override
+    public ProductoResponse  cambiarEstadoProducto(Long id, boolean nuevoEstado) {
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> new BusinessException("Producto no encontrado", HttpStatus.NOT_FOUND));
+        producto.setEstado(nuevoEstado);
+        Producto actualizado = productoRepository.save(producto);
+        return productoMapper.toResponse(actualizado);
+    }
+
     private void validarArchivoImagen(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("Archivo vacío", HttpStatus.BAD_REQUEST);
