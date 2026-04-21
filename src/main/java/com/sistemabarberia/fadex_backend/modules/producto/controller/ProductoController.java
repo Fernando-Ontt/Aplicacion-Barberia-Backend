@@ -53,4 +53,9 @@ public class ProductoController {
         return ResponseEntity.ok(ApiResponse.ok("Estado actualizado correctamente", estado));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        productoService.eliminarProducto(id);
+        return ResponseEntity.ok(ApiResponse.ok("Producto eliminado correctamente"));
+    }
 }

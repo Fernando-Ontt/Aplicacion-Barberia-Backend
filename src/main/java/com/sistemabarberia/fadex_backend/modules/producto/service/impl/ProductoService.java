@@ -97,6 +97,19 @@ public class ProductoService implements IProductoService {
         return productoMapper.toResponse(actualizado);
     }
 
+    @Override
+    public void eliminarProducto(Long id) {
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> new BusinessException("Producto no encontrado", HttpStatus.NOT_FOUND));
+        for (String url : producto.getUrlsMultimedia()) {
+            try {
+                fileStorageService.eliminarArchivo(url);
+            } catch (Exception e) {
+                throw new BusinessException("Archivo no eliminado", HttpStatus.BAD_REQUEST);
+            }
+        }
+        productoRepository.delete(producto);
+    }
+
     private void validarArchivoImagen(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("Archivo vacío", HttpStatus.BAD_REQUEST);
