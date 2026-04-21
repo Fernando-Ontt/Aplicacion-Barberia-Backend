@@ -1,7 +1,10 @@
-package com.sistemabarberia.fadex_backend.modules.seguridad.entity;
-import com.sistemabarberia.fadex_backend.modules.persona.entity.Persona;
+package com.sistemabarberia.fadex_backend.auth.usuario.Entity;
+import com.sistemabarberia.fadex_backend.auth.rol.Entity.Rol;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "usuario")
@@ -25,8 +28,11 @@ public class Usuario {
     @Column(name = "password")
     private String password;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_rol")
-    private Rol rol;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "usuario_rol",
+            joinColumns = @JoinColumn(name = "usuario_id"),
+            inverseJoinColumns = @JoinColumn(name = "rol_id")
+    )
+    private Set<Rol> roles = new HashSet<>();
 
 }

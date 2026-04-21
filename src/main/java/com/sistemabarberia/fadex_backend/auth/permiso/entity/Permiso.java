@@ -1,4 +1,4 @@
-package com.sistemabarberia.fadex_backend.modules.seguridad.entity;
+package com.sistemabarberia.fadex_backend.auth.permiso.entity;
 import jakarta.persistence.*;
 import lombok.*;
 

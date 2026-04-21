@@ -1,4 +1,5 @@
-package com.sistemabarberia.fadex_backend.modules.seguridad.entity;
+package com.sistemabarberia.fadex_backend.auth.rol.Entity;
+import com.sistemabarberia.fadex_backend.auth.permiso.entity.Permiso;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;

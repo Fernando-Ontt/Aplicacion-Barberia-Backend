@@ -1,5 +1,5 @@
 package com.sistemabarberia.fadex_backend.modules.seguridad.security;
-import com.sistemabarberia.fadex_backend.modules.seguridad.entity.Usuario;
+import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;

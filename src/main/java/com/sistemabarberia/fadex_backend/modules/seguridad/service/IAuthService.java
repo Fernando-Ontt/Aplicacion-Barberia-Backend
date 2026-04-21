@@ -1,6 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.seguridad.service;
 
-import com.sistemabarberia.fadex_backend.modules.seguridad.entity.Usuario;
+import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 
 public interface IAuthService {
 

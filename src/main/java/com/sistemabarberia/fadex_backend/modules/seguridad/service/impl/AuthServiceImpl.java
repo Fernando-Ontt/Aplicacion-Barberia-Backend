@@ -1,6 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.seguridad.service.impl;
 
-import com.sistemabarberia.fadex_backend.modules.seguridad.entity.Usuario;
+import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 import com.sistemabarberia.fadex_backend.modules.seguridad.repository.UsuarioRepository;
 import com.sistemabarberia.fadex_backend.modules.seguridad.security.CustomUserDetails;
 import com.sistemabarberia.fadex_backend.modules.seguridad.security.JwtUtil;

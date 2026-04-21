@@ -1,11 +1,9 @@
 package com.sistemabarberia.fadex_backend.modules.seguridad.service.impl;
 
-import com.sistemabarberia.fadex_backend.modules.persona.entity.Persona;
-import com.sistemabarberia.fadex_backend.modules.persona.repository.PersonaRepository;
 import com.sistemabarberia.fadex_backend.modules.seguridad.dto.request.RegisterRequest;
 import com.sistemabarberia.fadex_backend.modules.seguridad.dto.response.UsuarioResponse;
-import com.sistemabarberia.fadex_backend.modules.seguridad.entity.Rol;
-import com.sistemabarberia.fadex_backend.modules.seguridad.entity.Usuario;
+import com.sistemabarberia.fadex_backend.auth.rol.Entity.Rol;
+import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 import com.sistemabarberia.fadex_backend.modules.seguridad.repository.RolRepository;
 import com.sistemabarberia.fadex_backend.modules.seguridad.repository.UsuarioRepository;
 import com.sistemabarberia.fadex_backend.modules.seguridad.service.IUsuarioService;
