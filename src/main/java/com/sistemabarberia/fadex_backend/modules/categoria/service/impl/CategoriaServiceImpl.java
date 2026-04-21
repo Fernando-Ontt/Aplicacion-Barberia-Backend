@@ -25,12 +25,6 @@ public class CategoriaServiceImpl implements ICategoriaService {
     private final CategoriaMapper categoriaMapper;
 
     @Override
-    public List<CategoriaResponseDTO> listar() {
-        Map<Long, CategoriaResponseDTO> mapa = construirArbol();
-        return mapa.values().stream().filter(cat -> cat.getPadreId() == null).toList();
-    }
-
-    @Override
     public List<CategoriaResponseDTO> listarConFiltro(CategoriaFiltro filtro) {
         Map<Long, CategoriaResponseDTO> mapa = construirArbol();
         List<CategoriaResponseDTO> raiz = mapa.values().stream().filter(cat -> cat.getPadreId() == null).toList();
@@ -173,12 +167,11 @@ public class CategoriaServiceImpl implements ICategoriaService {
                 cumple = false;
             }
             List<CategoriaResponseDTO> hijosFiltrados = filtrarArbol(cat.getSubcategorias(), filtro);
-            if (cumple) {
+            if (cumple || !hijosFiltrados.isEmpty()) {
                 cat.setSubcategorias(hijosFiltrados);
                 resultado.add(cat);
             }
         }
         return resultado;
     }
-
 }

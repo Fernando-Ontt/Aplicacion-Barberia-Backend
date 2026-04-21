@@ -7,7 +7,6 @@ import com.sistemabarberia.fadex_backend.modules.categoria.dto.response.Categori
 import java.util.List;
 
 public interface ICategoriaService {
-    List<CategoriaResponseDTO> listar();
     List<CategoriaResponseDTO> listarConFiltro(CategoriaFiltro filtro);
     CategoriaResponseDTO obtenerPorId(Long id);
     CategoriaResponseDTO crear(CategoriaRequestDTO dto);
