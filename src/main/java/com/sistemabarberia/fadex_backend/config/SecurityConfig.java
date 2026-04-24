@@ -27,9 +27,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/usuarios/**").permitAll()
-                                .requestMatchers("/barberos/**").permitAll()
-                                .requestMatchers("/clientes/**").permitAll()
-                                .requestMatchers("/personas/**").permitAll()
+                                .requestMatchers("/api/v1/barberos/**").permitAll()
+                                .requestMatchers("/api/v1/clientes/**").permitAll()
+                                .requestMatchers("/api/v1/personas/**").permitAll()
                                 .requestMatchers("/api/v1/categorias/**").permitAll()
                                 .requestMatchers("/api/v1/productos/**").permitAll()
                                 .requestMatchers("/api/v1/cortes/**").permitAll()
