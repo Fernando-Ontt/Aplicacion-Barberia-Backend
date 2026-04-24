@@ -1,5 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.servicio.entity;
 
+import com.sistemabarberia.fadex_backend.modules.categoria.entity.Categoria;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,7 +18,7 @@ public class Corte {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_corte")
-    private Integer corteId;
+    private Long corteId;
 
     @Column(name = "nombre", length = 100)
     private String nombre;

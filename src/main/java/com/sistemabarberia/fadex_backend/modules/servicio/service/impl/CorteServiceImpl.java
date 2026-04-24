@@ -1,11 +1,11 @@
 package com.sistemabarberia.fadex_backend.modules.servicio.service.impl;
 
+import com.sistemabarberia.fadex_backend.modules.categoria.entity.Categoria;
+import com.sistemabarberia.fadex_backend.modules.categoria.repository.CategoriaRepository;
 import com.sistemabarberia.fadex_backend.modules.servicio.dto.request.CorteRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.servicio.dto.response.CorteResponseDTO;
-import com.sistemabarberia.fadex_backend.modules.servicio.entity.Categoria;
 import com.sistemabarberia.fadex_backend.modules.servicio.entity.Corte;
 import com.sistemabarberia.fadex_backend.modules.servicio.mapper.CorteMapper;
-import com.sistemabarberia.fadex_backend.modules.servicio.repository.CategoriaRepository;
 import com.sistemabarberia.fadex_backend.modules.servicio.repository.CorteRepository;
 import com.sistemabarberia.fadex_backend.modules.servicio.service.ICorteService;
 import lombok.RequiredArgsConstructor;
@@ -43,19 +43,19 @@ public class CorteServiceImpl implements ICorteService {
     }
 
     @Override
-    public List<CorteResponseDTO> listarPorCategoria(Integer categoriaId) {
+    public List<CorteResponseDTO> listarPorCategoria(Long categoriaId) {
 
         if (!categoriaRepository.existsById(categoriaId)) {
             throw new RuntimeException("Categoría no encontrada");
         }
 
         return corteMapper.toResponseList(
-                corteRepository.findByCategoria_CategoriaId(categoriaId)
+                corteRepository.findByCategoriaId(categoriaId)
         );
     }
 
     @Override
-    public CorteResponseDTO obtenerPorId(Integer id) {
+    public CorteResponseDTO obtenerPorId(Long id) {
         Corte corte = corteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Corte no encontrado"));
 
@@ -63,7 +63,7 @@ public class CorteServiceImpl implements ICorteService {
     }
 
     @Override
-    public CorteResponseDTO actualizar(Integer id, CorteRequestDTO dto) {
+    public CorteResponseDTO actualizar(Long id, CorteRequestDTO dto) {
 
         Corte corte = corteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Corte no encontrado"));
@@ -84,7 +84,7 @@ public class CorteServiceImpl implements ICorteService {
     }
 
     @Override
-    public void eliminar(Integer id) {
+    public void eliminar(Long id) {
 
         if (!corteRepository.existsById(id)) {
             throw new RuntimeException("Corte no encontrado");

@@ -8,11 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CorteRepository extends JpaRepository<Corte, Integer> {
+public interface CorteRepository extends JpaRepository<Corte, Long> {
 
     Optional<Corte> findByNombre(String nombre);
-
     boolean existsByNombre(String nombre);
-
-    List<Corte> findByCategoria_CategoriaId(Integer categoriaId);
+    List<Corte> findByCategoriaId(Long categoriaId);
 }

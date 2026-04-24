@@ -11,9 +11,9 @@ import java.math.BigDecimal;
 @Builder
 public class CorteResponseDTO {
 
-    private Integer corteId;
+    private Long corteId;
     private String nombre;
     private BigDecimal precio;
-    private Integer categoriaId;
+    private Long categoriaId;
     private String categoriaNombre;
 }

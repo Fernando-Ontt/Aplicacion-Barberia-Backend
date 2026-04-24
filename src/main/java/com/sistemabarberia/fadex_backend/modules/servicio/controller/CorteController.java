@@ -24,12 +24,12 @@ public class CorteController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CorteResponseDTO> obtenerPorId(@PathVariable Integer id) {
+    public ResponseEntity<CorteResponseDTO> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(corteService.obtenerPorId(id));
     }
 
     @GetMapping("/categoria/{categoriaId}")
-    public ResponseEntity<List<CorteResponseDTO>> listarPorCategoria(@PathVariable Integer categoriaId) {
+    public ResponseEntity<List<CorteResponseDTO>> listarPorCategoria(@PathVariable Long categoriaId) {
         return ResponseEntity.ok(corteService.listarPorCategoria(categoriaId));
     }
 
@@ -41,13 +41,13 @@ public class CorteController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CorteResponseDTO> actualizar(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @Valid @RequestBody CorteRequestDTO dto) {
         return ResponseEntity.ok(corteService.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         corteService.eliminar(id);
         return ResponseEntity.noContent().build();
     }

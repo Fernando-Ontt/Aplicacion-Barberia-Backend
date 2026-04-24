@@ -1,0 +1,831 @@
+{
+  "info": {
+    "_postman_id": "25acecb8-16ec-4174-a422-8ccb9f6394f3",
+    "name": "Fadex",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47585629",
+    "_collection_link": "https://go.postman.co/collection/47585629-25acecb8-16ec-4174-a422-8ccb9f6394f3?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Clientes",
+      "item": [
+        {
+          "name": "Clientes",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"personaId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api}}/clientes",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clientes",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/clientes/eliminar/1",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "clientes",
+                "eliminar",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Barberos",
+      "item": [
+        {
+          "name": "listarBarberos",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api}}}/barberos?page=0&size=5",
+              "host": [
+                "{{api}}}"
+              ],
+              "path": [
+                "barberos"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Barbero",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"personaId\": 1,\r\n  \"experiencia\": 3,\r\n  \"estado\": \"ACTIVO\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api}}}/barberos",
+              "host": [
+                "{{api}}}"
+              ],
+              "path": [
+                "barberos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Barberos",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"experiencia\":7\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api}}/barberos/actualizar/1",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "barberos",
+                "actualizar",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Barbero",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/barberos/eliminar/1",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "barberos",
+                "eliminar",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "buscarBarbero",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"personaId\": 1,\r\n  \"experiencia\": 3,\r\n  \"estado\": \"ACTIVO\"\r\n}"
+            },
+            "url": {
+              "raw": "{{api}}/barberos/1",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "barberos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Personas",
+      "item": [
+        {
+          "name": "listarPersona",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/personas",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "personas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Persona",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombre\":\"Hian Adriano\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api}}/personas/actualizar/1",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "personas",
+                "actualizar",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Persona",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"personaId\": 1\r\n}"
+            },
+            "url": {
+              "raw": "{{api}}/personas",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "personas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Persona",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/personas/eliminar/1",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "personas",
+                "eliminar",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "buscarPersona",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/personas/1",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "personas",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "listarProductos",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/productos",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "crearProducto",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "archivos",
+                  "type": "file",
+                  "uuid": "0716454a-4a03-4724-af40-b9ee99c32f82",
+                  "src": "postman-cloud:///1f119ce7-8234-4210-911b-b0819cb429e5"
+                },
+                {
+                  "key": "producto",
+                  "type": "text",
+                  "uuid": "fdb65589-1b26-41cf-b08d-0cb12f9b987f",
+                  "value": "{\n  \"nombre\": \"Cera para cabello\",\n  \"descripcion\": \"Cera profesional de fijación fuerte\",\n  \"precio\": 25.50,\n  \"stock\": 10,\n  \"estado\": true,\n  \"publicado\": true,\n  \"idCategoria\": 1\n}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{api}}/productos",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "actualizarProducto",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/productos/id",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "productos",
+                "id"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "eliminarProducto",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/productos/id",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "productos",
+                "id"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "activarProducto",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/productos/activo",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "productos",
+                "activo"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categoria",
+      "item": [
+        {
+          "name": "listarCategorias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/categorias",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "categorias"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "listarCategorias",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api}}/categorias",
+                  "host": [
+                    "{{api}}"
+                  ],
+                  "path": [
+                    "categorias"
+                  ]
+                }
+              },
+              "_postman_previewlanguage": "",
+              "header": [],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\r\n    \"success\": true,\r\n    \"message\": \"Categorías recuperadas con éxito\",\r\n    \"data\": [\r\n        {\r\n            \"id\": 2,\r\n            \"nombre\": \"Corte de cabello\",\r\n            \"descripcion\": null,\r\n            \"estado\": true,\r\n            \"padreId\": null,\r\n            \"padreNombre\": null,\r\n            \"subcategorias\": [\r\n                {\r\n                    \"id\": 5,\r\n                    \"nombre\": \"Cortes modernos\",\r\n                    \"descripcion\": \"Estilos actuales\",\r\n                    \"estado\": true,\r\n                    \"padreId\": 2,\r\n                    \"padreNombre\": \"Corte de cabello\",\r\n                    \"subcategorias\": []\r\n                },\r\n                {\r\n                    \"id\": 6,\r\n                    \"nombre\": \"Cortes militares\",\r\n                    \"descripcion\": \"Estilos actuales\",\r\n                    \"estado\": true,\r\n                    \"padreId\": 2,\r\n                    \"padreNombre\": \"Corte de cabello\",\r\n                    \"subcategorias\": []\r\n                }\r\n            ]\r\n        },\r\n        {\r\n            \"id\": 3,\r\n            \"nombre\": \"Corte de barba\",\r\n            \"descripcion\": null,\r\n            \"estado\": true,\r\n            \"padreId\": null,\r\n            \"padreNombre\": null,\r\n            \"subcategorias\": []\r\n        },\r\n        {\r\n            \"id\": 4,\r\n            \"nombre\": \"Cortes modernos\",\r\n            \"descripcion\": \"Estilos actuales\",\r\n            \"estado\": true,\r\n            \"padreId\": null,\r\n            \"padreNombre\": null,\r\n            \"subcategorias\": []\r\n        }\r\n    ],\r\n    \"timestamp\": \"2026-04-19T14:53:52.331057300\"\r\n}"
+            },
+            {
+              "name": "listarCategoriasId",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api}}/categorias/1",
+                  "host": [
+                    "{{api}}"
+                  ],
+                  "path": [
+                    "categorias",
+                    "1"
+                  ]
+                }
+              },
+              "_postman_previewlanguage": null,
+              "header": null,
+              "cookie": [],
+              "body": "{\r\n    \"success\": true,\r\n    \"message\": \"Categoría encontrada\",\r\n    \"data\": {\r\n        \"id\": 2,\r\n        \"nombre\": \"Corte de cabello\",\r\n        \"descripcion\": null,\r\n        \"estado\": true,\r\n        \"padreId\": null,\r\n        \"padreNombre\": null,\r\n        \"subcategorias\": [\r\n            {\r\n                \"id\": 5,\r\n                \"nombre\": \"Cortes modernos\",\r\n                \"descripcion\": \"Estilos actuales\",\r\n                \"estado\": true,\r\n                \"padreId\": 2,\r\n                \"padreNombre\": \"Corte de cabello\",\r\n                \"subcategorias\": []\r\n            },\r\n            {\r\n                \"id\": 6,\r\n                \"nombre\": \"Cortes militares\",\r\n                \"descripcion\": \"Estilos actuales\",\r\n                \"estado\": true,\r\n                \"padreId\": 2,\r\n                \"padreNombre\": \"Corte de cabello\",\r\n                \"subcategorias\": []\r\n            }\r\n        ]\r\n    },\r\n    \"timestamp\": \"2026-04-19T14:53:03.597160600\"\r\n}"
+            },
+            {
+              "name": "listarCategoriasFiltros",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api}}/categorias",
+                  "host": [
+                    "{{api}}"
+                  ],
+                  "path": [
+                    "categorias"
+                  ],
+                  "query": [
+                    {
+                      "key": "nombre",
+                      "value": "cortes",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "estado",
+                      "value": "true",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "padreId",
+                      "value": "2",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "tipo",
+                      "value": "PRODUCTO",
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "_postman_previewlanguage": null,
+              "header": null,
+              "cookie": [],
+              "body": null
+            }
+          ]
+        },
+        {
+          "name": "crearCategoria",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Shampoo\",\r\n  \"descripcion\": \"Estilos actuales de corte\",\r\n  \"estado\": true,\r\n  \"tipo\":\"PRODUCTO\",\r\n  \"padreId\": null\r\n}\r\n\r\n\r\n// {\r\n//   \"nombre\": \"Cortes\",\r\n//   \"descripcion\": \"Estilos actuales de corte\",\r\n//   \"estado\": true,\r\n//   \"tipo\":\"SERVICIO\",\r\n//   \"padreId\": null\r\n// }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api}}/categorias",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "categorias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "actualizarCategorias",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nombre\": \"Afeitados\",\r\n  \"descripcion\": \"Estilos actuales de corte\",\r\n  \"estado\": true,\r\n  \"tipo\":\"SERVICIO\",\r\n  \"padreId\": 2\r\n}\r\n\r\n// {\r\n//   \"nombre\": \"Cortes\",\r\n//   \"descripcion\": \"Estilos actuales de corte\",\r\n//   \"estado\": true,\r\n//   \"tipo\":\"SERVICIO\",\r\n//   \"padreId\": 4\r\n// }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api}}/categorias/1",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "categorias",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "activarEstado",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "admin",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/categorias/1/estado?estado=false",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "categorias",
+                "1",
+                "estado"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "false"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "eliminarCategorias",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/categorias/1",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "categorias",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

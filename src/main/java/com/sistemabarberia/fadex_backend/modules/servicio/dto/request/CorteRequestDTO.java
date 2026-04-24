@@ -22,5 +22,5 @@ public class CorteRequestDTO {
     private BigDecimal precio;
 
     @NotNull(message = "Categoría obligatoria")
-    private Integer categoriaId;
+    private Long categoriaId;
 }
