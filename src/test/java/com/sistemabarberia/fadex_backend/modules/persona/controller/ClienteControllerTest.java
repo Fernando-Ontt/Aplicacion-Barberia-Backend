@@ -56,7 +56,7 @@ class ClienteControllerTest {
         when(clienteService.listarClientes(any()))
                 .thenReturn(new PageImpl<>(List.of(dto), PageRequest.of(0, 10), 1));
 
-        mockMvc.perform(get("/clientes"))
+        mockMvc.perform(get("/api/v1/clientes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content[0].clienteId").value(1));
     }
@@ -68,7 +68,7 @@ class ClienteControllerTest {
                         .clienteId(1).build();
         when(clienteService.buscarCliente(1)).thenReturn(dto);
 
-        mockMvc.perform(get("/clientes/1"))
+        mockMvc.perform(get("/api/v1/clientes/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.clienteId").value(1));
     }
@@ -84,7 +84,7 @@ class ClienteControllerTest {
 
         when(clienteService.crearCliente(any())).thenReturn(response);
 
-        mockMvc.perform(post("/clientes")
+        mockMvc.perform(post("/api/v1/clientes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -97,7 +97,7 @@ class ClienteControllerTest {
                 .clienteId(1).build();
         when(clienteService.eliminar(1)).thenReturn(dto);
 
-        mockMvc.perform(delete("/clientes/eliminar/1"))
+        mockMvc.perform(delete("/api/v1/clientes/eliminar/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.clienteId").value(1));
     }

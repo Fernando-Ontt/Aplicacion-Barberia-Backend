@@ -63,7 +63,7 @@ class PersonaControllerTest {
                 .thenReturn(new PageImpl<>(List.of(dto), PageRequest.of(0, 10), 1));
 
         // WHEN + THEN
-        mockMvc.perform(get("/personas"))
+        mockMvc.perform(get("/api/v1/personas"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content[0].nombre").value("Juan"));
     }
@@ -75,7 +75,7 @@ class PersonaControllerTest {
                 .personaId(1).nombre("Juan").build();
 
         when(personaService.buscarPersona(1)).thenReturn(dto);
-        mockMvc.perform(get("/personas/1"))
+        mockMvc.perform(get("/api/v1/personas/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.nombre").value("Juan"));
     }
@@ -96,7 +96,7 @@ class PersonaControllerTest {
         when(personaService.crearPersona(any())).thenReturn(response);
 
         // WHEN + THEN
-        mockMvc.perform(post("/personas")
+        mockMvc.perform(post("/api/v1/personas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -112,7 +112,7 @@ class PersonaControllerTest {
         when(personaService.eliminar(1)).thenReturn(response);
 
         // WHEN + THEN
-        mockMvc.perform(delete("/personas/eliminar/1"))
+        mockMvc.perform(delete("/api/v1/personas/eliminar/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.personaId").value(1));
     }

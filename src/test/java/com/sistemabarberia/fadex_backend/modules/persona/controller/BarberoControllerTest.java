@@ -61,7 +61,7 @@ class BarberoControllerTest {
         when(barberoService.listarBarberos(any()))
                 .thenReturn(new PageImpl<>(List.of(dto), PageRequest.of(0, 10), 1));
 
-        mockMvc.perform(get("/barberos"))
+        mockMvc.perform(get("/api/v1/barberos"))
                 .andExpect(status().isOk()) //verifica la respuesta
                 .andExpect(jsonPath("$.data.content[0].barberoId").value(1));
     }
@@ -73,7 +73,7 @@ class BarberoControllerTest {
                 .barberoId(1).build();
         when(barberoService.buscarBarbero(1)).thenReturn(dto);
 
-        mockMvc.perform(get("/barberos/1")) //simula peticion http
+        mockMvc.perform(get("/api/v1/barberos/1")) //simula peticion http
                 .andExpect(status().isOk()) //Verifica que la respuesta HTTP tenga código 200 OK
                 .andExpect(jsonPath("$.data.barberoId").value(1));
     }
@@ -94,7 +94,7 @@ class BarberoControllerTest {
 
         when(barberoService.crearBarbero(any())).thenReturn(response);
 
-        mockMvc.perform(post("/barberos")
+        mockMvc.perform(post("/api/v1/barberos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -107,7 +107,7 @@ class BarberoControllerTest {
                 .barberoId(1).build();
         when(barberoService.eliminar(1)).thenReturn(dto);
 
-        mockMvc.perform(delete("/barberos/eliminar/1"))
+        mockMvc.perform(delete("/api/v1/barberos/eliminar/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.barberoId").value(1));
     }
