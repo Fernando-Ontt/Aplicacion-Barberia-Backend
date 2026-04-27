@@ -9,6 +9,7 @@ import com.sistemabarberia.fadex_backend.modules.categoria.mapper.CategoriaMappe
 import com.sistemabarberia.fadex_backend.modules.categoria.repository.CategoriaRepository;
 import com.sistemabarberia.fadex_backend.modules.categoria.service.ICategoriaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +22,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CategoriaServiceImpl implements ICategoriaService {
 
-    private final CategoriaRepository categoriaRepository;
-    private final CategoriaMapper categoriaMapper;
+    @Autowired
+    private CategoriaRepository categoriaRepository;
+    @Autowired
+    private CategoriaMapper categoriaMapper;
 
     @Override
     public List<CategoriaResponseDTO> listarConFiltro(CategoriaFiltro filtro) {

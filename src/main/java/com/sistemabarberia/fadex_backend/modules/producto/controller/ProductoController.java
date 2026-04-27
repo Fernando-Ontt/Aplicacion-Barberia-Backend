@@ -8,6 +8,7 @@ import com.sistemabarberia.fadex_backend.modules.producto.dto.response.ProductoR
 import com.sistemabarberia.fadex_backend.modules.producto.service.IProductoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
@@ -21,7 +22,9 @@ import java.util.List;
 @RequestMapping("api/v1/productos")
 @RequiredArgsConstructor
 public class ProductoController {
-    private final IProductoService productoService;
+
+    @Autowired
+    private  IProductoService productoService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ProductoResponse>>> obtenerProductos(@Valid @ModelAttribute ProductoFiltro filtro, @PageableDefault(size = 10, page = 0) Pageable pageable) {

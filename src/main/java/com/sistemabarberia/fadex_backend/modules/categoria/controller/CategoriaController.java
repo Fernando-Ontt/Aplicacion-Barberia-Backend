@@ -7,6 +7,7 @@ import com.sistemabarberia.fadex_backend.modules.categoria.dto.response.Categori
 import com.sistemabarberia.fadex_backend.modules.categoria.service.ICategoriaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoriaController {
 
-    private final ICategoriaService categoriaService;
+    @Autowired
+    private ICategoriaService categoriaService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<CategoriaResponseDTO>>> listar(CategoriaFiltro filtro) {
