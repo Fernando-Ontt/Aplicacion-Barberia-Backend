@@ -1,8 +1,7 @@
 package com.sistemabarberia.fadex_backend.modules.cliente.controller;
 
 import com.sistemabarberia.fadex_backend.commons.response.ApiResponse;
-import com.sistemabarberia.fadex_backend.modules.barbero.dto.request.BarberoRequestDTO;
-import com.sistemabarberia.fadex_backend.modules.barbero.dto.response.BarberoResponseDTO;
+import com.sistemabarberia.fadex_backend.commons.response.PageResponse;
 import com.sistemabarberia.fadex_backend.modules.cliente.dto.request.ClienteRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.cliente.dto.response.ClienteResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.cliente.service.IClienteService;
@@ -27,7 +26,7 @@ public class ClienteController {
 
     //Listar
     @GetMapping
-    public ResponseEntity<ApiResponse<ClienteResponseDTO>> listarClientes(
+    public ResponseEntity<ApiResponse<PageResponse<ClienteResponseDTO>>> listarClientes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
