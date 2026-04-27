@@ -12,10 +12,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest // 👈 Levanta solo la capa JPA con BD H2 en memoria
+@DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @TestPropertySource(properties = {
-        "spring.flyway.enabled=false"  // 👈 Desactiva Flyway en tests
+        "spring.flyway.enabled=false"
 })
 class PersonaRepositoryTest {
 
@@ -26,7 +26,7 @@ class PersonaRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Dato de prueba reutilizable
+
         persona = Persona.builder()
                 .nombre("Juan")
                 .apellido("Pérez")
@@ -37,10 +37,10 @@ class PersonaRepositoryTest {
 
     @Test
     void deberiaGuardarPersonaCorrectamente() {
-        // WHEN
+
         Persona guardado = personaRepository.save(persona);
 
-        // THEN
+
         assertThat(guardado.getPersonaId()).isNotNull();
         assertThat(guardado.getNombre()).isEqualTo("Juan");
         assertThat(guardado.getEmail()).isEqualTo("juan@gmail.com");
@@ -48,43 +48,40 @@ class PersonaRepositoryTest {
 
     @Test
     void deberiaBuscarPersonaPorId() {
-        // GIVEN
+
         Persona guardado = personaRepository.save(persona);
 
-        // WHEN
+
         Optional<Persona> resultado = personaRepository.findById(guardado.getPersonaId());
 
-        // THEN
+
         assertThat(resultado).isPresent();
         assertThat(resultado.get().getNombre()).isEqualTo("Juan");
     }
 
     @Test
     void deberiaEliminarPersona() {
-        // GIVEN
+
         Persona guardado = personaRepository.save(persona);
 
-        // WHEN
+
         personaRepository.delete(guardado);
         Optional<Persona> resultado = personaRepository.findById(guardado.getPersonaId());
 
-        // THEN
-        assertThat(resultado).isEmpty(); // 👈 Ya no existe
+
+        assertThat(resultado).isEmpty();
     }
 
     @Test
     void deberiaListarTodasLasPersonas() {
-        // GIVEN
         personaRepository.save(persona);
         personaRepository.save(Persona.builder()
                 .nombre("Ana").apellido("Lopez")
                 .telefono("912345678").email("ana@gmail.com")
                 .build());
 
-        // WHEN
         var lista = personaRepository.findAll();
 
-        // THEN
         assertThat(lista).hasSize(2);
     }
 }

@@ -1,10 +1,11 @@
 package com.sistemabarberia.fadex_backend.modules.persona.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sistemabarberia.fadex_backend.auth.security.filter.JwtAuthenticationFilter;
 import com.sistemabarberia.fadex_backend.modules.persona.dto.request.PersonaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.persona.dto.response.PersonaResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.persona.service.IPersonaService;
-import com.sistemabarberia.fadex_backend.modules.seguridad.security.JwtFilter;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,47 +26,47 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(value = PersonaController.class,      // Carga solo este controlador
+@WebMvcTest(value = PersonaController.class,
         excludeFilters = @ComponentScan.Filter(
-                type = FilterType.ASSIGNABLE_TYPE,// Excluir por clase específica
-                classes = JwtFilter.class         // Esta clase en particular
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = JwtAuthenticationFilter.class
             )
 )
-//Configura el MockMvc que es el objeto que simula peticiones HTTP sin levantar un servidor
-@AutoConfigureMockMvc(addFilters = false)  //cada peticion pasa por Jwt,autenticacion,etc si es true , pero false lo omite
 
-//Anotacion permite definir propedades de configuracion en tests
+@AutoConfigureMockMvc(addFilters = false)
+
+
 @TestPropertySource(properties = {
-        "spring.flyway.enabled=false" //Inhabilita el flyway para que pueda correr
-        // sin la bd del servidor creando sus propios datos en memoria usando H2 (BD simulada en Ram)
+        "spring.flyway.enabled=false"
+
 })
 
 class PersonaControllerTest {
 
     @Autowired
-    private MockMvc mockMvc; // Simula peticiones HTTP sin levantar servidor real
+    private MockMvc mockMvc;
 
-    @MockBean //Crea objeto falso Y lo registra en Spring
-    private IPersonaService personaService; // Mock del servicio
+    @MockBean
+    private IPersonaService personaService;
 
     @Autowired
-    private ObjectMapper objectMapper; // Para convertir objetos a JSON
+    private ObjectMapper objectMapper;
 
     @Test
     void deberiaListarPersonas() throws Exception {
         // GIVEN
-        PersonaResponseDTO dto = PersonaResponseDTO.builder() //se crea una solicitud dto builder pide simular los datos siguientes
+        PersonaResponseDTO dto = PersonaResponseDTO.builder()
                 .personaId(1).usuarioId(1).nombre("Juan").apellido("Pérez")
-                .telefono("987654321").email("juan@gmail.com") //datos simulados que estaran en memoria
+                .telefono("987654321").email("juan@gmail.com")
                 .build();
 
-        when(personaService.listarPersonas(any())) //cuando el servicio pida llamar a todos con cualquier parametro
-                .thenReturn(new PageImpl<>(List.of(dto), PageRequest.of(0, 10), 1)); // retornara la paginacion con ellos
+        when(personaService.listarPersonas(any()))
+                .thenReturn(new PageImpl<>(List.of(dto), PageRequest.of(0, 10), 1));
 
         // WHEN + THEN
         mockMvc.perform(get("/personas"))
-                .andExpect(status().isOk()) //verifica la respuesta
-                .andExpect(jsonPath("$.data.content[0].nombre").value("Juan")); //Verifica el JSON de respuesta
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].nombre").value("Juan"));
     }
 
     @Test
@@ -75,8 +76,6 @@ class PersonaControllerTest {
                 .personaId(1).nombre("Juan").build();
 
         when(personaService.buscarPersona(1)).thenReturn(dto);
-
-        // WHEN + THEN
         mockMvc.perform(get("/personas/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.nombre").value("Juan"));

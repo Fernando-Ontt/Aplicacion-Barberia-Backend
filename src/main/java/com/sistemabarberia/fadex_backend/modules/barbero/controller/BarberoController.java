@@ -2,6 +2,7 @@ package com.sistemabarberia.fadex_backend.modules.barbero.controller;
 
 
 import com.sistemabarberia.fadex_backend.commons.response.ApiResponse;
+import com.sistemabarberia.fadex_backend.commons.response.PageResponse;
 import com.sistemabarberia.fadex_backend.modules.barbero.dto.request.BarberoRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.barbero.dto.request.BarberoUpdateRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.barbero.dto.response.BarberoResponseDTO;
@@ -26,7 +27,7 @@ public class BarberoController {
 
     //Listar Barberos
     @GetMapping
-    public ResponseEntity<ApiResponse<BarberoResponseDTO>> listarBarberos(
+    public ResponseEntity<ApiResponse<PageResponse<BarberoResponseDTO>>> listarBarberos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
