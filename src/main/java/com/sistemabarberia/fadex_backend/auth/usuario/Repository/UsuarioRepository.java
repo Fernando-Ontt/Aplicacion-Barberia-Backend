@@ -13,11 +13,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      @Query(
              """
                      select u FROM Usuario u
-                     join  fetch u.roles r
-                     join fetch r.permisos
-                     where u.user =  :userame \s
+                     left join  fetch u.roles r
+                     left join fetch r.permisos
+                     where u.user =  :user
                                                                                \s
-             \s"""
+             
+          """
      )
-    Optional<Usuario> findByUserWithRolesYPermisos(String username);
+    Optional<Usuario> findByUserWithRolesYPermisos(String user);
 }

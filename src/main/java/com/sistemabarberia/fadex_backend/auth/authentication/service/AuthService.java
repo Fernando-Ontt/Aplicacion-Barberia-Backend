@@ -24,23 +24,31 @@ public class AuthService {
     private final JwtProperties jwtProperties;
 
 
-    public TokenResponse login(LoginRequest request){
+    public TokenResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
-               new UsernamePasswordAuthenticationToken(
-                       request.username(),
-                       request.password()
-               )
+                new UsernamePasswordAuthenticationToken(
+                        request.username(),
+                        request.password()
+                )
         );
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
         String token = jwtService.generateToken(userDetails);
+
         String username = jwtService.extractClaim(token, Claims::getSubject);
-        long expiredIn= jwtProperties.getExpiration()/1000;
-        String rol= jwtService.extractClaim(token, claims ->  claims.get("rol", String.class));
-        List<String> permisos = jwtService.extractClaim(token, claims -> claims.get("permisos", List.class));
+        long expiredIn = jwtProperties.getExpiration() / 1000;
 
-        return new TokenResponse(token,"bearer",expiredIn,username,rol,permisos);
 
+        List<String> roles = jwtService.extractClaim(token,
+                claims -> claims.get("roles", List.class));
+
+        List<String> permisos = jwtService.extractClaim(token,
+                claims -> claims.get("permisos", List.class));
+
+        String rol = (roles != null && !roles.isEmpty())
+                ? roles.get(0).replace("ROLE_", "")
+                : null;
+
+        return new TokenResponse(token, "bearer", expiredIn, username, rol, permisos);
     }
 }
