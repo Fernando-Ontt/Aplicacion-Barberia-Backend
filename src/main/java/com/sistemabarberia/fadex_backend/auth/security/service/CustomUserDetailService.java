@@ -1,7 +1,7 @@
 package com.sistemabarberia.fadex_backend.auth.security.service;
 
 import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
-import com.sistemabarberia.fadex_backend.modules.seguridad.repository.UsuarioRepository;
+import com.sistemabarberia.fadex_backend.auth.usuario.Repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,11 +17,12 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
-    private  final UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByUser(username).orElseThrow(()->new UsernameNotFoundException("usuario no encontrado"));
+        Usuario usuario = usuarioRepository.findByUserWithRolesYPermisos(username).orElseThrow(()->new UsernameNotFoundException("usuario no encontrado"));
+
 
         Set<GrantedAuthority> authorities = new HashSet<>();
         usuario.getRoles().forEach(rol->{
