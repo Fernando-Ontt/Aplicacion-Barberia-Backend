@@ -9,6 +9,7 @@ import com.sistemabarberia.fadex_backend.modules.categoria.mapper.CategoriaMappe
 import com.sistemabarberia.fadex_backend.modules.categoria.repository.CategoriaRepository;
 import com.sistemabarberia.fadex_backend.modules.categoria.service.ICategoriaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -21,12 +22,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CategoriaServiceImpl implements ICategoriaService {
 
-    private final CategoriaRepository categoriaRepository;
-    private final CategoriaMapper categoriaMapper;
+    @Autowired
+    private CategoriaRepository categoriaRepository;
+    @Autowired
+    private CategoriaMapper categoriaMapper;
 
     @Override
     public List<CategoriaResponseDTO> listarConFiltro(CategoriaFiltro filtro) {
-        Map<Long, CategoriaResponseDTO> mapa = construirArbol();
+        boolean incluirInactivas = filtro != null && Boolean.FALSE.equals(filtro.getEstado());
+        Map<Long, CategoriaResponseDTO> mapa = construirArbol(incluirInactivas);
         List<CategoriaResponseDTO> raiz = mapa.values().stream().filter(cat -> cat.getPadreId() == null).toList();
         if (filtro == null) return raiz;
         return filtrarArbol(raiz, filtro);
@@ -36,7 +40,7 @@ public class CategoriaServiceImpl implements ICategoriaService {
     public CategoriaResponseDTO obtenerPorId(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
-        Map<Long, CategoriaResponseDTO> mapa = construirArbol();
+        Map<Long, CategoriaResponseDTO> mapa = construirArbol(false);
         if (categoria.getPadre() != null) {
             return mapa.get(categoria.getPadre().getId());
         }
@@ -114,9 +118,6 @@ public class CategoriaServiceImpl implements ICategoriaService {
 
     @Override
     public CategoriaResponseDTO cambiarEstado(Long id, Boolean estado) {
-        System.out.println("ID recibido => " + id);
-        System.out.println("Estado recibido => " + estado);
-
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
         categoria.setEstado(estado);
@@ -127,12 +128,11 @@ public class CategoriaServiceImpl implements ICategoriaService {
     public void eliminar(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
-        categoria.setEstado(false);
-        categoriaRepository.save(categoria);
+        categoriaRepository.delete(categoria);
     }
 
-    private Map<Long, CategoriaResponseDTO> construirArbol() {
-        List<Categoria> categorias = categoriaRepository.findByEstadoTrue();
+    private Map<Long, CategoriaResponseDTO> construirArbol(boolean incluirInactivas) {
+        List<Categoria> categorias = incluirInactivas ? categoriaRepository.findAll() : categoriaRepository.findByEstadoTrue();
         List<CategoriaResponseDTO> dtos = categoriaMapper.toResponseList(categorias);
         Map<Long, CategoriaResponseDTO> mapa = new HashMap<>();
         for (CategoriaResponseDTO dto : dtos) {
