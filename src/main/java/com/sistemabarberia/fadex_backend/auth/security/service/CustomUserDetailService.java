@@ -32,14 +32,7 @@ public class CustomUserDetailService implements UserDetailsService {
             });
         });
 
-        return User.builder()
-                .username(usuario.getUser())
-                .password(usuario.getPassword())
-                .authorities(authorities)
-
-
-                .build();
-
+        return new CustomUserDetails(usuario, authorities);
     }
 
 

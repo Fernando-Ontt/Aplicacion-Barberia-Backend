@@ -5,13 +5,14 @@ package com.sistemabarberia.fadex_backend.auth.security.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -27,7 +28,8 @@ import javax.crypto.SecretKey;
 @RequiredArgsConstructor
 public class JwtService {
 
-    private final JwtProperties properties;
+
+    private final JwtProperties properties ;
 
 
     private Key getSigningKey() {
