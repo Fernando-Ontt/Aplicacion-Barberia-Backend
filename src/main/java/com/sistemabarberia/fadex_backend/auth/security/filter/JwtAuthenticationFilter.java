@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -38,6 +40,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             final String authHeader = request.getHeader("Authorization");
 
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            String path = request.getServletPath();
+
+            if (path.startsWith("/api/v1/auth")) {
                 filterChain.doFilter(request, response);
                 return;
             }
