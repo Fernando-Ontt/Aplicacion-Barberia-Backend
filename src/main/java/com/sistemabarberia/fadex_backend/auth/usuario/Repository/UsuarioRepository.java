@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
      @Query(
              """
@@ -20,5 +20,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
              
           """
      )
-    Optional<Usuario> findByUserWithRolesYPermisos(String user);
+     Optional<Usuario> findByUserWithRolesYPermisos(String user);
+
+    Optional<Usuario> findByUser(String user);
 }
