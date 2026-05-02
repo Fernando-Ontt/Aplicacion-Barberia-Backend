@@ -14,6 +14,7 @@ import com.sistemabarberia.fadex_backend.modules.producto.repository.ProductoRep
 import com.sistemabarberia.fadex_backend.modules.producto.service.IProductoService;
 import com.sistemabarberia.fadex_backend.modules.producto.specs.ProductoSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -27,10 +28,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductoService implements IProductoService {
 
-    private final ProductoRepository productoRepository;
-    private final CategoriaRepository categoriaRepository;
-    private final ProductoMapper productoMapper;
-    private final FileStorageService fileStorageService;
+    @Autowired
+    private ProductoRepository productoRepository;
+    @Autowired
+    private CategoriaRepository categoriaRepository;
+    @Autowired
+    private ProductoMapper productoMapper;
+    @Autowired
+    private FileStorageService fileStorageService;
 
     private static final List<String> TIPOS_IMAGEN = List.of("image/jpeg", "image/png", "image/webp");
 

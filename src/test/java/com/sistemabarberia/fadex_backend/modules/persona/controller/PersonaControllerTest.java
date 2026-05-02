@@ -1,10 +1,11 @@
 package com.sistemabarberia.fadex_backend.modules.persona.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sistemabarberia.fadex_backend.auth.security.filter.JwtAuthenticationFilter;
 import com.sistemabarberia.fadex_backend.modules.persona.dto.request.PersonaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.persona.dto.response.PersonaResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.persona.service.IPersonaService;
-import com.sistemabarberia.fadex_backend.modules.seguridad.security.JwtFilter;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = PersonaController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
-                classes = JwtFilter.class
+                classes = JwtAuthenticationFilter.class
             )
 )
 
