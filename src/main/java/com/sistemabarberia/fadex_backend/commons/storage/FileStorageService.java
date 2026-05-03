@@ -1,5 +1,8 @@
 package com.sistemabarberia.fadex_backend.commons.storage;
 
+import com.sistemabarberia.fadex_backend.commons.exception.BusinessException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,84 +17,86 @@ import java.util.UUID;
 
 @Service
 public class FileStorageService {
-    private final String UPLOAD_DIR = "uploads";
 
-    /**
-     * @param archivo El archivo a guardar
-     * @param subCarpeta Carpeta destino (ej: "categorias", "documentos")
-     * @param tiposPermitidos Lista de MimeTypes (ej: "image/jpeg", "application/vnd.ms-excel")
-     */
+    @Value("${app.upload.dir}")
+    private String uploadDir;
+
+    private static final long MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
     public String guardarArchivo(MultipartFile archivo, String subCarpeta, List<String> tiposPermitidos) {
-        // 1. Validar vacío
+
+
         if (archivo == null || archivo.isEmpty()) {
-            throw new RuntimeException("Archivo inválido o vacío.");
+            throw new BusinessException("Archivo inválido o vacío", HttpStatus.BAD_REQUEST);
         }
 
-        // 2. Validar formato
+
+        if (archivo.getSize() > MAX_SIZE) {
+            throw new BusinessException("Archivo demasiado grande (máx 2MB)", HttpStatus.BAD_REQUEST);
+        }
+
+
         String contentType = archivo.getContentType();
         if (tiposPermitidos != null && !tiposPermitidos.contains(contentType)) {
-            throw new RuntimeException("Formato no permitido: " + contentType);
+            throw new BusinessException("Formato no permitido: " + contentType, HttpStatus.BAD_REQUEST);
         }
 
-        // 3. Generar estructura de fecha
+
+        String extension = obtenerExtensionSegura(contentType);
+
+
         LocalDate ahora = LocalDate.now();
         String fechaPath = String.format("%d/%02d", ahora.getYear(), ahora.getMonthValue());
 
         try {
-            // 4. Construir ruta física: uploads/productos/2026
-            Path rutaDestino = Paths.get(UPLOAD_DIR).resolve(subCarpeta).resolve(fechaPath);
 
-            // Crea todas las carpetas necesarias si no existen
+            Path rutaDestino = Paths.get(uploadDir).resolve(subCarpeta).resolve(fechaPath);
+
             if (!Files.exists(rutaDestino)) {
                 Files.createDirectories(rutaDestino);
             }
 
-            // 5. Nombre único para evitar sobrescribir archivos
-            String extension = obtenerExtension(archivo.getOriginalFilename());
+
             String nuevoNombre = UUID.randomUUID().toString() + extension;
 
             Path rutaCompleta = rutaDestino.resolve(nuevoNombre);
+
             Files.copy(archivo.getInputStream(), rutaCompleta, StandardCopyOption.REPLACE_EXISTING);
 
-            // 6. Retornar la ruta relativa que guardaremos en la BD
-            return "/" + UPLOAD_DIR + "/" + subCarpeta + "/" + fechaPath + "/" + nuevoNombre;
+            return subCarpeta + "/" + fechaPath + "/" + nuevoNombre;
 
         } catch (IOException e) {
-            throw new RuntimeException("Error crítico al guardar el archivo: " + e.getMessage());
+            throw new BusinessException("Error al guardar el archivo", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private String obtenerExtension(String nombreArchivo) {
-        return (nombreArchivo != null && nombreArchivo.contains("."))
-                ? nombreArchivo.substring(nombreArchivo.lastIndexOf("."))
-                : "";
+    private String obtenerExtensionSegura(String contentType) {
+        return switch (contentType) {
+            case "image/jpeg" -> ".jpg";
+            case "image/png" -> ".png";
+            case "image/webp" -> ".webp";
+            default -> throw new BusinessException("Tipo de archivo no soportado", HttpStatus.BAD_REQUEST);
+        };
     }
 
-    public void eliminarArchivo(String urlRelativa) {
-        if (urlRelativa == null || urlRelativa.isEmpty()) return;
+    public void eliminarArchivo(String rutaRelativa) {
+
+        if (rutaRelativa == null || rutaRelativa.isBlank()) return;
 
         try {
-            // 1. Obtenemos la ruta base (Ej: "uploads")
-            String directorioRaiz = "uploads";
 
-            // 2. Limpiamos la URL que viene de la BD
-            String rutaLimpia = urlRelativa.replace("/" + directorioRaiz + "/", "");
-            rutaLimpia = rutaLimpia.startsWith("/") ? rutaLimpia.substring(1) : rutaLimpia;
+            Path rutaCompleta = Paths.get(uploadDir).resolve(rutaRelativa).normalize().toAbsolutePath();
 
-            // 3. Combinamos Raíz + Ruta Limpia
-            Path rutaCompleta = Paths.get(directorioRaiz).resolve(rutaLimpia).toAbsolutePath();
-
-            // 4. Intento de borrado
             boolean eliminado = Files.deleteIfExists(rutaCompleta);
 
             if (eliminado) {
-                System.out.println("Borrado físico exitoso: " + rutaCompleta);
+                System.out.println("Archivo eliminado: " + rutaCompleta);
             } else {
-                System.out.println("Archivo no encontrado en: " + rutaCompleta);
+                System.out.println("Archivo no encontrado: " + rutaCompleta);
             }
+
         } catch (IOException e) {
-            System.err.println("Error al borrar: " + e.getMessage());
+            throw new BusinessException("Error al eliminar archivo", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

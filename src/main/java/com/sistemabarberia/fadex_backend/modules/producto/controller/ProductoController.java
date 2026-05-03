@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,10 +38,11 @@ public class ProductoController {
         ProductoResponse producto = productoService.obtenerProductoPorId(id);
         return ResponseEntity.ok(ApiResponse.ok("Producto obtenido correctamente", producto));
     }
+    @PreAuthorize("hasAuthority('PRODUCTO_CREATE')")
+    @PostMapping()
+    public ResponseEntity<ApiResponse<ProductoResponse>> crear(@RequestBody @Valid ProductoRequest request) {
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<ProductoResponse>> crear(@RequestPart("producto") ProductoRequest request, @RequestPart(value = "archivos", required = false) List<MultipartFile> archivos) {
-        ProductoResponse producto = productoService.crearProducto(request, archivos);
+        ProductoResponse producto = productoService.crearProducto(request);
         return ResponseEntity.ok(ApiResponse.ok("Producto creado correctamente", producto));
     }
 
@@ -60,5 +62,15 @@ public class ProductoController {
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         productoService.eliminarProducto(id);
         return ResponseEntity.ok(ApiResponse.ok("Producto eliminado correctamente"));
+    }
+
+    @PreAuthorize("hasAuthority('PRODUCTO_UPDATE')")
+    @PostMapping("/{id}/imagenes")
+    public ResponseEntity<ApiResponse<Void>> subirImagenes(
+            @PathVariable Long id,
+            @RequestParam("archivos") List<MultipartFile> archivos) {
+
+        productoService.subirImagenes(id, archivos);
+        return ResponseEntity.ok(ApiResponse.ok("Imágenes subidas"));
     }
 }
