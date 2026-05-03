@@ -12,8 +12,9 @@ import java.util.List;
 public interface IProductoService {
     PageResponse<ProductoResponse> listarProductoFiltros(ProductoFiltro filtro, Pageable pageable);
     ProductoResponse obtenerProductoPorId(Long id);
-    ProductoResponse crearProducto(ProductoRequest request, List<MultipartFile> archivos);
+    ProductoResponse crearProducto(ProductoRequest request);
     ProductoResponse actualizarProducto(Long id, ProductoRequest request, List<MultipartFile> archivos);
     ProductoResponse  cambiarEstadoProducto(Long id, boolean nuevoEstado);
     void eliminarProducto(Long id);
+    void subirImagenes(Long productoId, List<MultipartFile> archivos);
 }
