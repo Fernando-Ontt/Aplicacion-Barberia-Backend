@@ -38,6 +38,8 @@ public class ProductoController {
         ProductoResponse producto = productoService.obtenerProductoPorId(id);
         return ResponseEntity.ok(ApiResponse.ok("Producto obtenido correctamente", producto));
     }
+
+
     @PreAuthorize("hasAuthority('PRODUCTO_CREATE')")
     @PostMapping()
     public ResponseEntity<ApiResponse<ProductoResponse>> crear(@RequestBody @Valid ProductoRequest request) {
@@ -73,4 +75,6 @@ public class ProductoController {
         productoService.subirImagenes(id, archivos);
         return ResponseEntity.ok(ApiResponse.ok("Imágenes subidas"));
     }
+
+
 }

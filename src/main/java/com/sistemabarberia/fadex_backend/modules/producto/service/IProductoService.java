@@ -17,4 +17,5 @@ public interface IProductoService {
     ProductoResponse  cambiarEstadoProducto(Long id, boolean nuevoEstado);
     void eliminarProducto(Long id);
     void subirImagenes(Long productoId, List<MultipartFile> archivos);
+
 }

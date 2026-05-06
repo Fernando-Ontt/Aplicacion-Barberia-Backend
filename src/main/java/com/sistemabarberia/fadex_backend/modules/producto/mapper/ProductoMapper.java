@@ -28,7 +28,15 @@ public abstract class ProductoMapper {
         if (imagenes == null) return List.of();
 
         return imagenes.stream()
-                .map(ProductoImagen::getUrl)
+                .map(img -> {
+                    String url = img.getUrl();
+
+                    if (url.startsWith("http")) {
+                        return url;
+                    }
+
+                    return baseUrl + "/uploads/" + url;
+                })
                 .toList();
     }
 

@@ -131,6 +131,7 @@ public class ProductoService implements IProductoService {
             imagen.setProducto(producto);
             imagen.setUrl(url);
 
+
             productoImagenRepository.save(imagen);
         }
     }
@@ -157,6 +158,8 @@ public class ProductoService implements IProductoService {
         }
         return archivosValidos;
     }
+
+
 
 
 }
