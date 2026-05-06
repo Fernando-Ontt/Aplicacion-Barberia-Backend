@@ -9,9 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Files;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.time.LocalDate;
 
 import java.util.List;
@@ -23,9 +21,12 @@ public class FileStorageService {
     @Value("${app.upload.dir}")
     private String uploadDir;
 
+    @Value("${app.base-url}")
+    private String baseUrl;
+
     private static final long MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
-    public String guardarArchivo(MultipartFile archivo, String subCarpeta, List<String> tiposPermitidos) {
+    private static final List<String> TIPOS_IMAGEN = List.of("image/jpeg", "image/png", "image/webp");
 
         if (archivo == null || archivo.isEmpty()) {
             throw new BusinessException("Archivo inválido o vacío", HttpStatus.BAD_REQUEST);
@@ -57,7 +58,6 @@ public class FileStorageService {
             Files.createDirectories(rutaDestino);
 
             String nuevoNombre = UUID.randomUUID().toString() + extension;
-
             Path rutaCompleta = rutaDestino.resolve(nuevoNombre);
 
 
@@ -83,8 +83,8 @@ public class FileStorageService {
         };
     }
 
-    public void eliminarArchivo(String rutaRelativa) {
 
+    public void eliminarArchivo(String rutaRelativa) {
         if (rutaRelativa == null || rutaRelativa.isBlank()) return;
 
         try {
@@ -103,5 +103,14 @@ public class FileStorageService {
         } catch (IOException e) {
             throw new BusinessException("Error al eliminar archivo", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+
+    public String urlAPathRelativo(String urlPublica) {
+        if (urlPublica == null || urlPublica.isBlank()) return null;
+        if (!urlPublica.startsWith(baseUrl + "/uploads/")) {
+            throw new BusinessException("URL no válida: " + urlPublica, HttpStatus.BAD_REQUEST);
+        }
+        return urlPublica.replace(baseUrl + "/uploads/", "");
     }
 }
