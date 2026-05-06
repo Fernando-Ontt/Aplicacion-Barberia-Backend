@@ -6,12 +6,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import java.nio.file.Files;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -25,43 +27,45 @@ public class FileStorageService {
 
     public String guardarArchivo(MultipartFile archivo, String subCarpeta, List<String> tiposPermitidos) {
 
-
         if (archivo == null || archivo.isEmpty()) {
             throw new BusinessException("Archivo inválido o vacío", HttpStatus.BAD_REQUEST);
         }
 
-
         if (archivo.getSize() > MAX_SIZE) {
             throw new BusinessException("Archivo demasiado grande (máx 2MB)", HttpStatus.BAD_REQUEST);
         }
-
 
         String contentType = archivo.getContentType();
         if (tiposPermitidos != null && !tiposPermitidos.contains(contentType)) {
             throw new BusinessException("Formato no permitido: " + contentType, HttpStatus.BAD_REQUEST);
         }
 
-
         String extension = obtenerExtensionSegura(contentType);
-
 
         LocalDate ahora = LocalDate.now();
         String fechaPath = String.format("%d/%02d", ahora.getYear(), ahora.getMonthValue());
 
         try {
 
-            Path rutaDestino = Paths.get(uploadDir).resolve(subCarpeta).resolve(fechaPath);
+            Path basePath = Paths.get(uploadDir).toAbsolutePath().normalize();
 
-            if (!Files.exists(rutaDestino)) {
-                Files.createDirectories(rutaDestino);
-            }
 
+            Path rutaDestino = basePath
+                    .resolve(subCarpeta)
+                    .resolve(fechaPath);
+
+            Files.createDirectories(rutaDestino);
 
             String nuevoNombre = UUID.randomUUID().toString() + extension;
 
             Path rutaCompleta = rutaDestino.resolve(nuevoNombre);
 
+
+            System.out.println("BasePath: " + basePath);
+            System.out.println("RutaCompleta: " + rutaCompleta);
+
             Files.copy(archivo.getInputStream(), rutaCompleta, StandardCopyOption.REPLACE_EXISTING);
+
 
             return subCarpeta + "/" + fechaPath + "/" + nuevoNombre;
 
@@ -84,8 +88,9 @@ public class FileStorageService {
         if (rutaRelativa == null || rutaRelativa.isBlank()) return;
 
         try {
+            Path basePath = Paths.get(uploadDir).toAbsolutePath().normalize();
 
-            Path rutaCompleta = Paths.get(uploadDir).resolve(rutaRelativa).normalize().toAbsolutePath();
+            Path rutaCompleta = basePath.resolve(rutaRelativa).normalize();
 
             boolean eliminado = Files.deleteIfExists(rutaCompleta);
 
