@@ -45,8 +45,23 @@ public class ProductoService implements IProductoService {
     }
 
     @Override
-    public ProductoResponse crearProducto(ProductoRequest request, List<MultipartFile> archivos) {
-        return null;
+    public ProductoResponse crearProducto(ProductoRequest request, List<MultipartFile> archivos)  {
+        Categoria categoria = categoriaRepository.findById(request.getIdCategoria()).orElseThrow(() -> new BusinessException("La categoría con ID " + request.getIdCategoria() + " no existe",HttpStatus.BAD_REQUEST));
+        Producto producto = productoMapper.toEntity(request);
+        producto.setCategoria(categoria);
+        List<String> urls = new ArrayList<>();
+        List<MultipartFile> archivosValidos = filtrarArchivosNoVacios(archivos);
+
+        if (!archivosValidos.isEmpty()) {
+            for (MultipartFile file : archivosValidos) {
+                validarArchivoImagen(file);
+                String url = fileStorageService.guardarArchivo(file, "productos", TIPOS_IMAGEN);
+                urls.add(url);
+            }
+        }
+        producto.setUrlsMultimedia(urls);
+        Producto guardado = productoRepository.save(producto);
+        return productoMapper.toResponse(guardado);
     }
 
     @Override

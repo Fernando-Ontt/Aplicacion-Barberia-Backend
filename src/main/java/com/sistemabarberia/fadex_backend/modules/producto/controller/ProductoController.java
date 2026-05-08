@@ -38,9 +38,9 @@ public class ProductoController {
     }
 
     @PreAuthorize("hasAuthority('PRODUCTO_CREATE')")
-    @PostMapping()
-    public ResponseEntity<ApiResponse<ProductoResponse>> crear(@RequestBody @Valid ProductoRequest request) {
-        ProductoResponse producto = productoService.crearProducto();
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ProductoResponse>> crear(@RequestPart("producto") ProductoRequest request, @RequestPart(value = "archivos", required = false) List<MultipartFile> archivos) {
+        ProductoResponse producto = productoService.crearProducto(request, archivos);
         return ResponseEntity.ok(ApiResponse.ok("Producto creado correctamente", producto));
     }
 
