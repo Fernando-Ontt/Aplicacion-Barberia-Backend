@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface CorteRepository extends JpaRepository<Corte, Long> {
-
+    boolean existsByCategoriaId(Long categoriaId);
     Optional<Corte> findByNombre(String nombre);
     boolean existsByNombre(String nombre);
     List<Corte> findByCategoriaId(Long categoriaId);

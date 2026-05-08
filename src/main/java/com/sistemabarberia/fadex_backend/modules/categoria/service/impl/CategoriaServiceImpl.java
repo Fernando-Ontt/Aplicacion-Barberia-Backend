@@ -5,11 +5,13 @@ import com.sistemabarberia.fadex_backend.modules.categoria.dto.CategoriaFiltro;
 import com.sistemabarberia.fadex_backend.modules.categoria.dto.request.CategoriaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.categoria.dto.response.CategoriaResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.categoria.entity.Categoria;
+import com.sistemabarberia.fadex_backend.modules.categoria.entity.CategoriaEnum;
 import com.sistemabarberia.fadex_backend.modules.categoria.mapper.CategoriaMapper;
 import com.sistemabarberia.fadex_backend.modules.categoria.repository.CategoriaRepository;
 import com.sistemabarberia.fadex_backend.modules.categoria.service.ICategoriaService;
+import com.sistemabarberia.fadex_backend.modules.producto.repository.ProductoRepository;
+import com.sistemabarberia.fadex_backend.modules.servicio.repository.CorteRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -22,25 +24,26 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CategoriaServiceImpl implements ICategoriaService {
 
-    @Autowired
-    private CategoriaRepository categoriaRepository;
-    @Autowired
-    private CategoriaMapper categoriaMapper;
+    private final CategoriaRepository categoriaRepository;
+    private final ProductoRepository productoRepository;
+    private final CorteRepository corteRepository;
+    private final CategoriaMapper categoriaMapper;
 
     @Override
     public List<CategoriaResponseDTO> listarConFiltro(CategoriaFiltro filtro) {
         boolean incluirInactivas = filtro != null && Boolean.FALSE.equals(filtro.getEstado());
         Map<Long, CategoriaResponseDTO> mapa = construirArbol(incluirInactivas);
         List<CategoriaResponseDTO> raiz = mapa.values().stream().filter(cat -> cat.getPadreId() == null).toList();
-        if (filtro == null) return raiz;
+        if (filtro == null) {
+            return raiz;
+        }
         return filtrarArbol(raiz, filtro);
     }
 
     @Override
     public CategoriaResponseDTO obtenerPorId(Long id) {
-        Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
-        Map<Long, CategoriaResponseDTO> mapa = construirArbol(false);
+        Categoria categoria = categoriaRepository.findById(id).orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
+        Map<Long, CategoriaResponseDTO> mapa = construirArbol(true);
         if (categoria.getPadre() != null) {
             return mapa.get(categoria.getPadre().getId());
         }
