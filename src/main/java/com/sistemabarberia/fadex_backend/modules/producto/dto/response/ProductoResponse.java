@@ -18,5 +18,5 @@ public class ProductoResponse {
     private boolean publicado;
     private Long idCategoria;
     private String nombreCategoria;
-    private List<String> imagenes;
+    private List<String> urlsMultimedia;
 }

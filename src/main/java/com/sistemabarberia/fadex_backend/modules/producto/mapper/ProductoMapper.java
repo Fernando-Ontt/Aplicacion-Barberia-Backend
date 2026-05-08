@@ -3,49 +3,24 @@ package com.sistemabarberia.fadex_backend.modules.producto.mapper;
 import com.sistemabarberia.fadex_backend.modules.producto.dto.request.ProductoRequest;
 import com.sistemabarberia.fadex_backend.modules.producto.dto.response.ProductoResponse;
 import com.sistemabarberia.fadex_backend.modules.producto.entity.Producto;
-import org.mapstruct.*;
-import org.springframework.beans.factory.annotation.Value;
-
-import java.util.List;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
-public abstract class ProductoMapper {
-
-    @Value("${app.base-url}")
-    protected String baseUrl;
-
-    @Value("${app.upload.dir}")
-    protected String uploadDir;
+public interface ProductoMapper {
 
     @Mapping(target = "idCategoria", source = "categoria.id")
     @Mapping(target = "nombreCategoria", source = "categoria.nombre")
-    @Mapping(target = "imagenes", source = "imagenes", qualifiedByName = "mapImagenes")
-    public abstract ProductoResponse toResponse(Producto producto);
-
-    @Named("mapImagenes")
-    protected List<String> mapImagenes(List<ProductoImagen> imagenes) {
-        if (imagenes == null) return List.of();
-
-        return imagenes.stream()
-                .map(img -> {
-                    String url = img.getUrl();
-
-                    if (url.startsWith("http")) {
-                        return url;
-                    }
-
-                    return baseUrl + "/uploads/" + url;
-                })
-                .toList();
-    }
+    ProductoResponse toResponse(Producto producto);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "categoria", ignore = true)
-    @Mapping(target = "imagenes", ignore = true)
-    public abstract Producto toEntity(ProductoRequest request);
+    @Mapping(target = "urlsMultimedia", ignore = true)
+    Producto toEntity(ProductoRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "categoria", ignore = true)
-    @Mapping(target = "imagenes", ignore = true)
-    public abstract void updateFromRequest(ProductoRequest request, @MappingTarget Producto producto);
+    @Mapping(target = "urlsMultimedia", ignore = true)
+    void updateFromRequest(ProductoRequest request, @MappingTarget Producto producto);
 }

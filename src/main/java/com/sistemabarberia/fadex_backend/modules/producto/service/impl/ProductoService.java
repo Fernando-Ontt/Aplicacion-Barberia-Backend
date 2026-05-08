@@ -1,7 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.producto.service.impl;
 
 import com.sistemabarberia.fadex_backend.commons.exception.BusinessException;
-import com.sistemabarberia.fadex_backend.commons.exception.ResourceNotFoundException;
 import com.sistemabarberia.fadex_backend.commons.response.PageResponse;
 import com.sistemabarberia.fadex_backend.commons.storage.FileStorageService;
 import com.sistemabarberia.fadex_backend.modules.categoria.entity.Categoria;
@@ -27,16 +26,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ProductoService implements IProductoService {
-
-
     private final ProductoRepository productoRepository;
-
     private final CategoriaRepository categoriaRepository;
-
     private final ProductoMapper productoMapper;
-
     private final FileStorageService fileStorageService;
-
     private static final List<String> TIPOS_IMAGEN = List.of("image/jpeg", "image/png", "image/webp");
 
     @Override
@@ -52,18 +45,13 @@ public class ProductoService implements IProductoService {
     }
 
     @Override
-    public ProductoResponse crearProducto(ProductoRequest request)  {
-        Categoria categoria = categoriaRepository.findById(request.getIdCategoria()).orElseThrow(() -> new ResourceNotFoundException("La categoría con ID " + request.getIdCategoria() + " no existe"));
-        Producto producto = productoMapper.toEntity(request);
-        producto.setCategoria(categoria);
-
-        Producto guardado = productoRepository.save(producto);
-        return productoMapper.toResponse(guardado);
+    public ProductoResponse crearProducto(ProductoRequest request, List<MultipartFile> archivos) {
+        return null;
     }
 
     @Override
     public ProductoResponse actualizarProducto(Long id, ProductoRequest request, List<MultipartFile> archivos) {
-        Producto producto = productoRepository.findById(id).orElseThrow(() ->new BusinessException("Producto no encontrado",HttpStatus.NOT_FOUND));
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> new BusinessException("Producto no encontrado", HttpStatus.NOT_FOUND));
         Categoria categoria = categoriaRepository.findById(request.getIdCategoria()).orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.BAD_REQUEST));
         productoMapper.updateFromRequest(request, producto);
         producto.setCategoria(categoria);
@@ -99,27 +87,6 @@ public class ProductoService implements IProductoService {
         productoRepository.delete(producto);
     }
 
-    @Override
-    public void subirImagenes(Long productoId, List<MultipartFile> archivos) {
-        Producto producto = productoRepository.findById(productoId)
-                .orElseThrow(() -> new BusinessException("Producto no existe", HttpStatus.NOT_FOUND));
-
-        for (MultipartFile file : archivos) {
-            if (file.isEmpty()) continue;
-
-            validarArchivoImagen(file);
-
-            String url = fileStorageService.guardarArchivo(file, "productos", TIPOS_IMAGEN);
-
-//            ProductoImagen imagen = new ProductoImagen();
-//            imagen.setProducto(producto);
-//            imagen.setUrl(url);
-//
-//            productoImagenRepository.save(imagen);
-        }
-    }
-
-
     private void validarArchivoImagen(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("Archivo vacío", HttpStatus.BAD_REQUEST);
@@ -141,8 +108,4 @@ public class ProductoService implements IProductoService {
         }
         return archivosValidos;
     }
-
-
-
-
 }

@@ -8,7 +8,6 @@ import com.sistemabarberia.fadex_backend.modules.producto.dto.response.ProductoR
 import com.sistemabarberia.fadex_backend.modules.producto.service.IProductoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
@@ -24,8 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductoController {
 
-    @Autowired
-    private  IProductoService productoService;
+    private final IProductoService productoService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ProductoResponse>>> obtenerProductos(@Valid @ModelAttribute ProductoFiltro filtro, @PageableDefault(size = 10, page = 0) Pageable pageable) {
@@ -39,12 +37,10 @@ public class ProductoController {
         return ResponseEntity.ok(ApiResponse.ok("Producto obtenido correctamente", producto));
     }
 
-
     @PreAuthorize("hasAuthority('PRODUCTO_CREATE')")
     @PostMapping()
     public ResponseEntity<ApiResponse<ProductoResponse>> crear(@RequestBody @Valid ProductoRequest request) {
-
-        ProductoResponse producto = productoService.crearProducto(request);
+        ProductoResponse producto = productoService.crearProducto();
         return ResponseEntity.ok(ApiResponse.ok("Producto creado correctamente", producto));
     }
 
@@ -65,16 +61,5 @@ public class ProductoController {
         productoService.eliminarProducto(id);
         return ResponseEntity.ok(ApiResponse.ok("Producto eliminado correctamente"));
     }
-
-    @PreAuthorize("hasAuthority('PRODUCTO_UPDATE')")
-    @PostMapping("/{id}/imagenes")
-    public ResponseEntity<ApiResponse<Void>> subirImagenes(
-            @PathVariable Long id,
-            @RequestParam("archivos") List<MultipartFile> archivos) {
-
-        productoService.subirImagenes(id, archivos);
-        return ResponseEntity.ok(ApiResponse.ok("Imágenes subidas"));
-    }
-
 
 }
