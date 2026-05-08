@@ -21,7 +21,7 @@ public class CategoriaController {
     private final ICategoriaService categoriaService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CategoriaResponseDTO>>> listar(CategoriaFiltro filtro) {
+    public ResponseEntity<ApiResponse<List<CategoriaResponseDTO>>> listar(@ModelAttribute CategoriaFiltro filtro) {
         List<CategoriaResponseDTO> data = categoriaService.listarConFiltro(filtro);
         return ResponseEntity.ok(ApiResponse.ok("Categorías filtradas correctamente", data));
     }
@@ -51,8 +51,8 @@ public class CategoriaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         categoriaService.eliminar(id);
-        return ResponseEntity.ok(ApiResponse.ok("Categoría eliminada correctamente", null));
+        return ResponseEntity.ok(ApiResponse.ok("Categoría eliminada correctamente"));
     }
 }

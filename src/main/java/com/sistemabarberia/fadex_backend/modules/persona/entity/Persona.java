@@ -1,6 +1,5 @@
 package com.sistemabarberia.fadex_backend.modules.persona.entity;
 
-import com.sistemabarberia.fadex_backend.modules.seguridad.entity.Usuario;
 import jakarta.persistence.*;
 import lombok.*;
 

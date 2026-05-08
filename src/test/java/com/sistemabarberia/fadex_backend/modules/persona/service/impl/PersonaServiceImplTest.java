@@ -17,21 +17,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class) // 👈 Activa Mockito
+@ExtendWith(MockitoExtension.class)
 class PersonaServiceImplTest {
 
     @Mock
-    private PersonaRepository personaRepository; // 👈 Simulado, no toca BD real
+    private PersonaRepository personaRepository;
 
     @Mock
-    private PersonaMapper mapper; // 👈 Simulado
+    private PersonaMapper mapper;
 
     @InjectMocks
-    private PersonaServiceImpl personaService; // 👈 El que realmente probamos
-
+    private PersonaServiceImpl personaService;
     @Test
     void deberiaCrearPersonaCorrectamente() {
-        // GIVEN
         PersonaRequestDTO dto = new PersonaRequestDTO();
         dto.setNombre("Juan");
         dto.setApellido("Pérez");
@@ -43,23 +41,19 @@ class PersonaServiceImplTest {
         PersonaResponseDTO responseDTO = PersonaResponseDTO.builder()
                 .personaId(1).nombre("Juan").build();
 
-        // Definimos qué retorna cada mock
         when(mapper.toEntity(dto)).thenReturn(entidad);
         when(personaRepository.save(entidad)).thenReturn(guardada);
         when(mapper.toResponseDTO(guardada)).thenReturn(responseDTO);
 
-        // WHEN
         PersonaResponseDTO resultado = personaService.crearPersona(dto);
 
-        // THEN
         assertThat(resultado.getPersonaId()).isEqualTo(1);
         assertThat(resultado.getNombre()).isEqualTo("Juan");
-        verify(personaRepository, times(1)).save(entidad); // 👈 Verificamos que se llamó
+        verify(personaRepository, times(1)).save(entidad);
     }
 
     @Test
     void deberiaBuscarPersonaPorId() {
-        // GIVEN
         Persona persona = Persona.builder().personaId(1).nombre("Juan").build();
         PersonaResponseDTO responseDTO = PersonaResponseDTO.builder()
                 .personaId(1).nombre("Juan").build();
@@ -67,20 +61,16 @@ class PersonaServiceImplTest {
         when(personaRepository.findById(1)).thenReturn(Optional.of(persona));
         when(mapper.toResponseDTO(persona)).thenReturn(responseDTO);
 
-        // WHEN
         PersonaResponseDTO resultado = personaService.buscarPersona(1);
 
-        // THEN
         assertThat(resultado.getNombre()).isEqualTo("Juan");
     }
 
     @Test
     void deberiLanzarExcepcionSiPersonaNoExiste() {
-        // GIVEN
         when(personaRepository.findById(99)).thenReturn(Optional.empty());
 
-        // THEN
         assertThatThrownBy(() -> personaService.buscarPersona(99))
-                .isInstanceOf(RuntimeException.class); // 👈 Tu BusinessException extiende de esta
+                .isInstanceOf(RuntimeException.class);
     }
 }

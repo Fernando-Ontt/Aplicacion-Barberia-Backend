@@ -10,6 +10,7 @@ import java.util.List;
 @Repository
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
     List<Categoria> findByEstadoTrue();
+    boolean existsByPadreId(Long padreId);
     boolean existsByNombreIgnoreCaseAndPadreIsNullAndEstadoTrue(String nombre);
     boolean existsByNombreIgnoreCaseAndPadreIdAndEstadoTrueAndTipo(String nombre, Long padreId, CategoriaEnum tipo);
 }
