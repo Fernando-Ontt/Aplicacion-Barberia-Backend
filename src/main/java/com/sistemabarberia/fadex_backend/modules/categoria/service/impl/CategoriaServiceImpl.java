@@ -131,8 +131,17 @@ public class CategoriaServiceImpl implements ICategoriaService {
 
     @Override
     public CategoriaResponseDTO cambiarEstado(Long id, Boolean estado) {
-        Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
+        Categoria categoria = categoriaRepository.findById(id).orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
+        if (Boolean.FALSE.equals(estado)) {
+            boolean tieneSubcategorias = categoriaRepository.existsByPadreId(id);
+            boolean tieneElementos = categoria.getTipo() == CategoriaEnum.PRODUCTO ? productoRepository.existsByCategoriaId(id) : corteRepository.existsByCategoriaId(id);
+            if (tieneSubcategorias) {
+                throw new BusinessException("No se puede desactivar la categoría porque tiene subcategorías asociadas", HttpStatus.BAD_REQUEST);
+            }
+            if (tieneElementos) {
+                throw new BusinessException("No se puede desactivar la categoría porque tiene elementos asociados", HttpStatus.BAD_REQUEST);
+            }
+        }
         categoria.setEstado(estado);
         return categoriaMapper.toResponse(categoriaRepository.save(categoria));
     }
