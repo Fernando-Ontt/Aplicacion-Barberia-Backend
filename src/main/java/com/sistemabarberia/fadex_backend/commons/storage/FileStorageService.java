@@ -1,116 +1,83 @@
 package com.sistemabarberia.fadex_backend.commons.storage;
 
+
 import com.sistemabarberia.fadex_backend.commons.exception.BusinessException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-
 import java.nio.file.Files;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
-
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class FileStorageService {
 
-    @Value("${app.upload.dir}")
-    private String uploadDir;
+    @Value("${file.upload-dir}") private String uploadDir;
 
-    @Value("${app.base-url}")
-    private String baseUrl;
+    /**
+     * @param archivo El archivo a guardar
+     * @param subCarpeta Carpeta destino (ej: "categorias", "documentos")
+     * @param tiposPermitidos Lista de MimeTypes (ej: "image/jpeg", "application/vnd.ms-excel")
+     */
 
-    private static final long MAX_SIZE = 2 * 1024 * 1024; // 2MB
-
-    private static final List<String> TIPOS_IMAGEN = List.of("image/jpeg", "image/png", "image/webp");
-
+    public String guardarArchivo(MultipartFile archivo, String subCarpeta, List<String> tiposPermitidos) {
+        // 1. Validar vacío
         if (archivo == null || archivo.isEmpty()) {
             throw new BusinessException("Archivo inválido o vacío", HttpStatus.BAD_REQUEST);
         }
-
-        if (archivo.getSize() > MAX_SIZE) {
-            throw new BusinessException("Archivo demasiado grande (máx 2MB)", HttpStatus.BAD_REQUEST);
-        }
-
+        // 2. Validar formato
         String contentType = archivo.getContentType();
         if (tiposPermitidos != null && !tiposPermitidos.contains(contentType)) {
             throw new BusinessException("Formato no permitido: " + contentType, HttpStatus.BAD_REQUEST);
         }
-
-        String extension = obtenerExtensionSegura(contentType);
-
+        // 3. Generar estructura de fecha
         LocalDate ahora = LocalDate.now();
         String fechaPath = String.format("%d/%02d", ahora.getYear(), ahora.getMonthValue());
-
         try {
-
-            Path basePath = Paths.get(uploadDir).toAbsolutePath().normalize();
-
-
-            Path rutaDestino = basePath
-                    .resolve(subCarpeta)
-                    .resolve(fechaPath);
-
-            Files.createDirectories(rutaDestino);
-
+            Path rutaDestino = Paths.get(uploadDir).resolve(subCarpeta).resolve(fechaPath);
+            if (!Files.exists(rutaDestino)) {
+                Files.createDirectories(rutaDestino);
+            }
+            String extension = obtenerExtension(archivo.getOriginalFilename());
             String nuevoNombre = UUID.randomUUID().toString() + extension;
             Path rutaCompleta = rutaDestino.resolve(nuevoNombre);
-
-
-            System.out.println("BasePath: " + basePath);
-            System.out.println("RutaCompleta: " + rutaCompleta);
-
             Files.copy(archivo.getInputStream(), rutaCompleta, StandardCopyOption.REPLACE_EXISTING);
-
-
-            return subCarpeta + "/" + fechaPath + "/" + nuevoNombre;
-
+             return subCarpeta + "/" + fechaPath + "/" + nuevoNombre;
         } catch (IOException e) {
-            throw new BusinessException("Error al guardar el archivo", HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Error guardando archivo", e);
+            throw new BusinessException("Error al guardar archivo", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private String obtenerExtensionSegura(String contentType) {
-        return switch (contentType) {
-            case "image/jpeg" -> ".jpg";
-            case "image/png" -> ".png";
-            case "image/webp" -> ".webp";
-            default -> throw new BusinessException("Tipo de archivo no soportado", HttpStatus.BAD_REQUEST);
-        };
+    private String obtenerExtension(String nombreArchivo) {
+        return (nombreArchivo != null && nombreArchivo.contains(".")) ? nombreArchivo.substring(nombreArchivo.lastIndexOf(".")) : "";
     }
 
-
-    public void eliminarArchivo(String rutaRelativa) {
-        if (rutaRelativa == null || rutaRelativa.isBlank()) return;
-
+    public void eliminarArchivo(String urlRelativa) {
+        if (urlRelativa == null || urlRelativa.isEmpty()) {
+            return;
+        }
         try {
-            Path basePath = Paths.get(uploadDir).toAbsolutePath().normalize();
-
-            Path rutaCompleta = basePath.resolve(rutaRelativa).normalize();
-
+            Path rutaCompleta = Paths.get(uploadDir).resolve(urlRelativa).toAbsolutePath();
             boolean eliminado = Files.deleteIfExists(rutaCompleta);
 
             if (eliminado) {
-                System.out.println("Archivo eliminado: " + rutaCompleta);
+                log.info("Borrado físico exitoso: {}", rutaCompleta);
             } else {
-                System.out.println("Archivo no encontrado: " + rutaCompleta);
+                log.warn("Archivo no encontrado en: {}", rutaCompleta);
             }
-
         } catch (IOException e) {
+            log.error("Error eliminando archivo: {}", urlRelativa, e);
             throw new BusinessException("Error al eliminar archivo", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-
-    public String urlAPathRelativo(String urlPublica) {
-        if (urlPublica == null || urlPublica.isBlank()) return null;
-        if (!urlPublica.startsWith(baseUrl + "/uploads/")) {
-            throw new BusinessException("URL no válida: " + urlPublica, HttpStatus.BAD_REQUEST);
-        }
-        return urlPublica.replace(baseUrl + "/uploads/", "");
     }
 }

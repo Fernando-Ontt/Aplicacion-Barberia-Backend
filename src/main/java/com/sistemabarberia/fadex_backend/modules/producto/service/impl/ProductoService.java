@@ -10,14 +10,11 @@ import com.sistemabarberia.fadex_backend.modules.producto.dto.ProductoFiltro;
 import com.sistemabarberia.fadex_backend.modules.producto.dto.request.ProductoRequest;
 import com.sistemabarberia.fadex_backend.modules.producto.dto.response.ProductoResponse;
 import com.sistemabarberia.fadex_backend.modules.producto.entity.Producto;
-import com.sistemabarberia.fadex_backend.modules.producto.entity.ProductoImagen;
 import com.sistemabarberia.fadex_backend.modules.producto.mapper.ProductoMapper;
-import com.sistemabarberia.fadex_backend.modules.producto.repository.ProductoImagenRepository;
 import com.sistemabarberia.fadex_backend.modules.producto.repository.ProductoRepository;
 import com.sistemabarberia.fadex_backend.modules.producto.service.IProductoService;
 import com.sistemabarberia.fadex_backend.modules.producto.specs.ProductoSpecification;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -39,9 +36,6 @@ public class ProductoService implements IProductoService {
     private final ProductoMapper productoMapper;
 
     private final FileStorageService fileStorageService;
-
-    private final ProductoImagenRepository productoImagenRepository;
-
 
     private static final List<String> TIPOS_IMAGEN = List.of("image/jpeg", "image/png", "image/webp");
 
@@ -102,16 +96,6 @@ public class ProductoService implements IProductoService {
     public void eliminarProducto(Long id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Producto no encontrado", HttpStatus.NOT_FOUND));
-
-        for (String url : producto.getUrlsMultimedia()) {
-            try {
-                String rutaRelativa = fileStorageService.urlAPathRelativo(url);
-                fileStorageService.eliminarArchivo(rutaRelativa);
-            } catch (Exception e) {
-                System.err.println("No se pudo eliminar archivo: " + url + " -> " + e.getMessage());
-            }
-        }
-
         productoRepository.delete(producto);
     }
 
@@ -127,12 +111,11 @@ public class ProductoService implements IProductoService {
 
             String url = fileStorageService.guardarArchivo(file, "productos", TIPOS_IMAGEN);
 
-            ProductoImagen imagen = new ProductoImagen();
-            imagen.setProducto(producto);
-            imagen.setUrl(url);
-
-
-            productoImagenRepository.save(imagen);
+//            ProductoImagen imagen = new ProductoImagen();
+//            imagen.setProducto(producto);
+//            imagen.setUrl(url);
+//
+//            productoImagenRepository.save(imagen);
         }
     }
 

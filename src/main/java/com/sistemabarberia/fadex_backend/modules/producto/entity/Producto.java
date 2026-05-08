@@ -49,9 +49,4 @@ public class Producto {
     @Column(name = "url_recurso")
     @Builder.Default
     private List<String> urlsMultimedia = new ArrayList<>();
-
-    @OneToMany(mappedBy = "producto", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductoImagen> imagenes;
-
-
 }

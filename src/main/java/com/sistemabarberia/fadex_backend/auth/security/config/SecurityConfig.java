@@ -52,26 +52,26 @@ public class SecurityConfig {
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/uploads/**").permitAll()
+
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/usuarios/**").permitAll()
                         .requestMatchers("/api/v1/barberos/**").permitAll()
-                        .requestMatchers("api/v1/clientes/**").permitAll()
-                        .requestMatchers("api/v1/personas/**").permitAll()
+                        .requestMatchers("/api/v1/clientes/**").permitAll()
+                        .requestMatchers("/api/v1/personas/**").permitAll()
                         .requestMatchers("/api/v1/categorias/**").permitAll()
                         .requestMatchers("/api/v1/usuarios/**").permitAll()
                         .requestMatchers("/api/v1/productos/**").permitAll()
                         .requestMatchers("/api/v1/cortes/**").permitAll()
                         .requestMatchers("/api/v1/ventas/**").permitAll()
+
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
-                        .requestMatchers("/uploads/**").permitAll()
+
                         .anyRequest().authenticated()
 
                 )
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
-
-
     }
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -98,7 +98,6 @@ public class SecurityConfig {
         ));
 
         config.setExposedHeaders(List.of("Authorization"));
-
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -3,7 +3,6 @@ package com.sistemabarberia.fadex_backend.modules.producto.mapper;
 import com.sistemabarberia.fadex_backend.modules.producto.dto.request.ProductoRequest;
 import com.sistemabarberia.fadex_backend.modules.producto.dto.response.ProductoResponse;
 import com.sistemabarberia.fadex_backend.modules.producto.entity.Producto;
-import com.sistemabarberia.fadex_backend.modules.producto.entity.ProductoImagen;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Value;
 
