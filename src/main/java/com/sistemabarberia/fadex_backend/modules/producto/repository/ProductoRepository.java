@@ -12,7 +12,7 @@ import com.sistemabarberia.fadex_backend.modules.producto.entity.Producto;
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Long>,JpaSpecificationExecutor<Producto> {
-
+    boolean existsByCategoriaId(Long categoriaId);
     @EntityGraph(attributePaths = {"imagenes","categoria"})
     Page<Producto> findAll (Specification<Producto> filtrar, Pageable pageable);
 

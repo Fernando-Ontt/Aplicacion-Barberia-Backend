@@ -82,39 +82,50 @@ public class CategoriaServiceImpl implements ICategoriaService {
 
     @Override
     public CategoriaResponseDTO actualizar(Long id, CategoriaRequestDTO dto) {
-        Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
-
-        boolean cambioNombre = !categoria.getNombre().equalsIgnoreCase(dto.getNombre());
+        Categoria categoria = categoriaRepository.findById(id).orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
+        boolean cambioNombre = !categoria.getNombre().equalsIgnoreCase(dto.getNombre().trim());
+        boolean cambioTipo = !categoria.getTipo().equals(dto.getTipo());
 
         if (cambioNombre) {
             if (dto.getPadreId() == null) {
-                if (categoriaRepository.existsByNombreIgnoreCaseAndPadreIsNullAndEstadoTrue(dto.getNombre())) {
+                if (categoriaRepository.existsByNombreIgnoreCaseAndPadreIsNullAndEstadoTrue(dto.getNombre().trim())) {
                     throw new BusinessException("La categoría ya existe en nivel raíz", HttpStatus.BAD_REQUEST);
                 }
             } else {
-                if (categoriaRepository.existsByNombreIgnoreCaseAndPadreIdAndEstadoTrueAndTipo(
-                        dto.getNombre(), dto.getPadreId(), dto.getTipo())) {
+                if (categoriaRepository.existsByNombreIgnoreCaseAndPadreIdAndEstadoTrueAndTipo(dto.getNombre().trim(), dto.getPadreId(), dto.getTipo())) {
                     throw new BusinessException("La categoría ya existe en esta categoría padre", HttpStatus.BAD_REQUEST);
                 }
             }
         }
-
-        categoria.setNombre(dto.getNombre());
-        categoria.setDescripcion(dto.getDescripcion());
-        categoria.setEstado(dto.getEstado() != null ? dto.getEstado() : categoria.isEstado());
-        categoria.setTipo(dto.getTipo());
-
         if (dto.getPadreId() != null) {
-            Categoria padre = categoriaRepository.findById(dto.getPadreId())
-                    .orElseThrow(() -> new BusinessException("La categoría padre no existe", HttpStatus.NOT_FOUND));
+            Categoria padre = categoriaRepository.findById(dto.getPadreId()).orElseThrow(() -> new BusinessException("La categoría padre no existe", HttpStatus.NOT_FOUND));
             if (!padre.isEstado()) {
                 throw new BusinessException("La categoría padre está inactiva", HttpStatus.BAD_REQUEST);
+            }
+            if (dto.getPadreId().equals(id)) {
+                throw new BusinessException("Una categoría no puede ser su propia padre", HttpStatus.BAD_REQUEST);
+            }
+            if (!padre.getTipo().equals(dto.getTipo())) {
+                throw new BusinessException("El tipo debe coincidir con la categoría padre", HttpStatus.BAD_REQUEST);
             }
             categoria.setPadre(padre);
         } else {
             categoria.setPadre(null);
         }
+        if (cambioTipo) {
+            boolean tieneHijos = categoriaRepository.existsByPadreId(categoria.getId());
+            boolean tieneElementos = categoria.getTipo() == CategoriaEnum.PRODUCTO ? productoRepository.existsByCategoriaId(id) : corteRepository.existsByCategoriaId(id);
+            if (tieneHijos) {
+                throw new BusinessException("No se puede cambiar el tipo porque tiene subcategorías", HttpStatus.BAD_REQUEST);
+            }
+            if (tieneElementos) {
+                throw new BusinessException("No se puede cambiar el tipo porque tiene elementos asociados", HttpStatus.BAD_REQUEST);
+            }
+        }
+        categoria.setNombre(dto.getNombre().trim());
+        categoria.setDescripcion(dto.getDescripcion() != null ? dto.getDescripcion().trim() : null);
+        categoria.setEstado(dto.getEstado() != null ? dto.getEstado() : categoria.isEstado());
+        categoria.setTipo(dto.getTipo());
         return categoriaMapper.toResponse(categoriaRepository.save(categoria));
     }
 
