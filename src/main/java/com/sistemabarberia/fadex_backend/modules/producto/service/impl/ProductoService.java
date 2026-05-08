@@ -66,7 +66,7 @@ public class ProductoService implements IProductoService {
 
     @Override
     public ProductoResponse actualizarProducto(Long id, ProductoRequest request, List<MultipartFile> archivos) {
-        Producto producto = productoRepository.findById(id).orElseThrow(() -> new BusinessException("Producto no encontrado", HttpStatus.NOT_FOUND));
+        Producto producto = productoRepository.findById(id).orElseThrow(() ->new BusinessException("Producto no encontrado",HttpStatus.NOT_FOUND));
         Categoria categoria = categoriaRepository.findById(request.getIdCategoria()).orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.BAD_REQUEST));
         productoMapper.updateFromRequest(request, producto);
         producto.setCategoria(categoria);
@@ -96,9 +96,19 @@ public class ProductoService implements IProductoService {
     }
 
     @Override
+    public ProductoResponse cambiarPublicacion(Long id, boolean publicado) {
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> new BusinessException("Producto no encontrado", HttpStatus.NOT_FOUND));
+        producto.setPublicado(publicado);
+        Producto actualizado = productoRepository.save(producto);
+        return productoMapper.toResponse(actualizado);
+    }
+
+    @Override
     public void eliminarProducto(Long id) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Producto no encontrado", HttpStatus.NOT_FOUND));
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> new BusinessException("Producto no encontrado", HttpStatus.NOT_FOUND));
+        for (String url : producto.getUrlsMultimedia()) {
+            fileStorageService.eliminarArchivo(url);
+        }
         productoRepository.delete(producto);
     }
 
