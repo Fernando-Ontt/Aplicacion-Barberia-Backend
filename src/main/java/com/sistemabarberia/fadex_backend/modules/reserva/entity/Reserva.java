@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @AllArgsConstructor
@@ -30,8 +31,9 @@ public class Reserva {
     private Barbero barbero;
 
 
-    private LocalDate fechaInicio;
-    private LocalDate fechaFin;
+    private LocalDate fecha;
+    private LocalTime HoraInicio;
+    private LocalTime HoraFin;
 
     private BigDecimal total;
 
