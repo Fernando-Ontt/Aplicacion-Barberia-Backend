@@ -148,9 +148,17 @@ public class CategoriaServiceImpl implements ICategoriaService {
 
     @Override
     public void eliminar(Long id) {
-        Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
-        categoriaRepository.delete(categoria);
+        Categoria categoria = categoriaRepository.findById(id).orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
+        boolean tieneSubcategorias = categoriaRepository.existsByPadreId(id);
+        boolean tieneElementos = categoria.getTipo() == CategoriaEnum.PRODUCTO ? productoRepository.existsByCategoriaId(id) : corteRepository.existsByCategoriaId(id);
+        if (tieneSubcategorias) {
+            throw new BusinessException("No se puede eliminar la categoría porque tiene subcategorías asociadas", HttpStatus.BAD_REQUEST);
+        }
+        if (tieneElementos) {
+            throw new BusinessException("No se puede eliminar la categoría porque tiene elementos asociados", HttpStatus.BAD_REQUEST);
+        }
+        categoria.setEstado(false);
+        categoriaRepository.save(categoria);
     }
 
     private Map<Long, CategoriaResponseDTO> construirArbol(boolean incluirInactivas) {
