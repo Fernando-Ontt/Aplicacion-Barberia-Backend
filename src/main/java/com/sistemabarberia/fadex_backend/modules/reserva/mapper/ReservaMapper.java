@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 public interface ReservaMapper {
 
     Reserva toEntity(ReservaRequest request);
-
+    @Mapping(target = "reservaId", source = "id")
     @Mapping(target = "clienteNombre", source = "reserva.cliente.persona.nombre")
     @Mapping(target = "barberoNombre", source = "reserva.barbero.persona.nombre")
     @Mapping(target = "servicio", source = "reserva.servicio.nombre")

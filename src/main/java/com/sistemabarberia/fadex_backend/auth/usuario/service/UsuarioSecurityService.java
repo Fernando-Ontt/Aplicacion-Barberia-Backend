@@ -44,11 +44,25 @@ public class UsuarioSecurityService {
         );
     }
     public String getRolePrincipal(){
-               String rol = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().
-                       map(GrantedAuthority::getAuthority).findFirst().orElseThrow(
-                               ()->   new BusinessException("Usuario sin roles" , HttpStatus.FORBIDDEN)
-                       );
-        return rol;
+
+        SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getAuthorities()
+                .forEach(a -> System.out.println("AUTH: " + a.getAuthority()));
+
+        return SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(auth -> auth.startsWith("ROLE_"))
+                .findFirst()
+                .orElseThrow(() ->
+                        new BusinessException(
+                                "Usuario sin roles",
+                                HttpStatus.FORBIDDEN
+                        )
+                );
     }
 
 }

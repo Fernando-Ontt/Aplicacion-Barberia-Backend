@@ -52,7 +52,7 @@ public class ServicioServiceImpl implements IServicioService {
         }
 
         return corteMapper.toResponseList(
-                servicioRepository.findByCategoriaId(categoriaId)
+                servicioRepository.findByCategoriaId_Id(categoriaId)
         );
     }
 

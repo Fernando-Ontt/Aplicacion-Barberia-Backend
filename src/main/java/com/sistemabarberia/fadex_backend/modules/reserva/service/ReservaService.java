@@ -4,6 +4,7 @@ import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 import com.sistemabarberia.fadex_backend.auth.usuario.service.UsuarioSecurityService;
 import com.sistemabarberia.fadex_backend.commons.exception.BusinessException;
 import com.sistemabarberia.fadex_backend.commons.exception.ResourceNotFoundException;
+import com.sistemabarberia.fadex_backend.commons.response.ApiResponse;
 import com.sistemabarberia.fadex_backend.modules.barbero.entity.Barbero;
 
 import com.sistemabarberia.fadex_backend.modules.barbero.repository.BarberoRepository;
@@ -43,6 +44,7 @@ public class ReservaService {
 
       Usuario usuario = securityService.getUsuarioLogueado();
       String rol = securityService.getRolePrincipal();
+      System.out.println("ROL DEL USUARIO: " + rol);
       Barbero barbero ;
       Cliente cliente;
       Servicio servicio = servicioRepository.findById(request.servicioId()).orElseThrow(()-> new ResourceNotFoundException("Servicio no encontrado"));

@@ -13,5 +13,6 @@ public interface ServicioRepository extends JpaRepository<Servicio, Long> {
 
     Optional<Servicio> findByNombre(String nombre);
     boolean existsByNombre(String nombre);
-    List<Servicio> findByCategoriaId(Long categoriaId);
+
+    List<Servicio> findByCategoriaId_Id(Long categoriaIdId);
 }

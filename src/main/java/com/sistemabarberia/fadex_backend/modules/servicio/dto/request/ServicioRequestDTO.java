@@ -23,4 +23,6 @@ public class ServicioRequestDTO {
 
     @NotNull(message = "Categoría obligatoria")
     private Long categoriaId;
+    @NotNull(message = "la duracion del servicio es obligatorio")
+    private Integer duracion;
 }

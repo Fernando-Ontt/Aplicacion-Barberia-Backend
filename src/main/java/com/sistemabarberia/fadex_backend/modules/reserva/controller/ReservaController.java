@@ -1,5 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.reserva.controller;
 
+import com.sistemabarberia.fadex_backend.commons.response.ApiResponse;
 import com.sistemabarberia.fadex_backend.modules.reserva.dto.Request.ReservaRequest;
 import com.sistemabarberia.fadex_backend.modules.reserva.dto.Response.ReservaDTO;
 

@@ -70,10 +70,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             final String username = jwtService.extractClaim(jwt, Claims::getSubject);
 
-            final List<String> authoritiesStr = jwtService.extractClaim(jwt, claims -> claims.get("permisos", List.class));
-            List<GrantedAuthority> authorities = authoritiesStr.stream()
+            final List<String> permisos = jwtService.extractClaim(jwt, claims -> claims.get("permisos", List.class));
+            List<GrantedAuthority> authorities = permisos.stream()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
+            final List<String> roles =
+                    jwtService.extractClaim(jwt, claims -> claims.get("roles", List.class));
+
+
+
+            if (roles != null) {
+                authorities.addAll(
+                        roles.stream()
+                                .map(SimpleGrantedAuthority::new)
+                                .toList()
+                );
+            }
+
+            if (permisos != null) {
+                authorities.addAll(
+                        permisos.stream()
+                                .map(SimpleGrantedAuthority::new)
+                                .toList()
+                );
+            }
 
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
