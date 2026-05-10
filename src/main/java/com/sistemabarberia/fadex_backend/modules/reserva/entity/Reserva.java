@@ -30,6 +30,7 @@ public class Reserva {
     private Cliente cliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_barbero")
     private Barbero barbero;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_servicio")
@@ -37,6 +38,9 @@ public class Reserva {
 
     @Enumerated(EnumType.STRING)
     private TipoReserva tipoReserva;
+
+    @Enumerated(EnumType.STRING)
+    private EstadoReserva estadoReserva;
     private LocalDate fecha;
     private LocalTime horaInicio;
     private LocalTime horaFin;

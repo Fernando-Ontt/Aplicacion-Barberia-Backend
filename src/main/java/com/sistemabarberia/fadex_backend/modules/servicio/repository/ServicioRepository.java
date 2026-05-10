@@ -15,4 +15,6 @@ public interface ServicioRepository extends JpaRepository<Servicio, Long> {
     boolean existsByNombre(String nombre);
 
     List<Servicio> findByCategoriaId_Id(Long categoriaIdId);
+
+    boolean existsByCategoriaId(Long id);
 }

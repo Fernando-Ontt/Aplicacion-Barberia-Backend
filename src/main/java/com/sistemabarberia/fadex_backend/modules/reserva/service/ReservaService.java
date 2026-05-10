@@ -12,6 +12,7 @@ import com.sistemabarberia.fadex_backend.modules.cliente.entity.Cliente;
 import com.sistemabarberia.fadex_backend.modules.cliente.repository.ClienteRepository;
 import com.sistemabarberia.fadex_backend.modules.reserva.dto.Request.ReservaRequest;
 import com.sistemabarberia.fadex_backend.modules.reserva.dto.Response.ReservaDTO;
+import com.sistemabarberia.fadex_backend.modules.reserva.entity.EstadoReserva;
 import com.sistemabarberia.fadex_backend.modules.reserva.entity.Reserva;
 import com.sistemabarberia.fadex_backend.modules.reserva.entity.TipoReserva;
 import com.sistemabarberia.fadex_backend.modules.reserva.mapper.ReservaMapper;
@@ -70,7 +71,7 @@ public class ReservaService {
       }
       LocalTime horaFin = request.horaInicio().plusMinutes(servicio.getDuracion());
       validarConflicto(barbero,request.fecha(),request.horaInicio(),horaFin);
-      Reserva reserva= crearReservaInterna(cliente,servicio,barbero, request.fecha(),request.horaInicio(),TipoReserva.RESERVA_VIRTUAL);
+      Reserva reserva= crearReservaInterna(cliente,servicio,barbero, request.fecha(),request.horaInicio(),TipoReserva.RESERVA_VIRTUAL,EstadoReserva.CONFIRMADA);
       return reservaMapper.toDto(reserva);
   }
 
@@ -79,7 +80,8 @@ public class ReservaService {
                                        Barbero barbero,
                                        LocalDate fecha,
                                        LocalTime horaInicio,
-                                       TipoReserva tipo
+                                       TipoReserva tipo,
+                                       EstadoReserva estado
                                        ){
 
       LocalTime horaFin = horaInicio.plusMinutes(servicio.getDuracion());
@@ -92,6 +94,7 @@ public class ReservaService {
       reserva.setTipoReserva(tipo);
       reserva.setHoraFin(horaFin);
       reserva.setTotal(servicio.getPrecio());
+      reserva.setEstadoReserva(estado);
       return reservaRepository.save(reserva);
   }
 

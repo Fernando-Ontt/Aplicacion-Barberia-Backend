@@ -45,10 +45,6 @@ public class UsuarioSecurityService {
     }
     public String getRolePrincipal(){
 
-        SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .forEach(a -> System.out.println("AUTH: " + a.getAuthority()));
 
         return SecurityContextHolder.getContext()
                 .getAuthentication()
