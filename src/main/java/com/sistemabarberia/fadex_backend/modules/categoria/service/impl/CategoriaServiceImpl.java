@@ -10,7 +10,8 @@ import com.sistemabarberia.fadex_backend.modules.categoria.mapper.CategoriaMappe
 import com.sistemabarberia.fadex_backend.modules.categoria.repository.CategoriaRepository;
 import com.sistemabarberia.fadex_backend.modules.categoria.service.ICategoriaService;
 import com.sistemabarberia.fadex_backend.modules.producto.repository.ProductoRepository;
-import com.sistemabarberia.fadex_backend.modules.servicio.repository.CorteRepository;
+
+import com.sistemabarberia.fadex_backend.modules.servicio.repository.ServicioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class CategoriaServiceImpl implements ICategoriaService {
 
     private final CategoriaRepository categoriaRepository;
     private final ProductoRepository productoRepository;
-    private final CorteRepository corteRepository;
+    private final ServicioRepository corteRepository;
     private final CategoriaMapper categoriaMapper;
 
     @Override
