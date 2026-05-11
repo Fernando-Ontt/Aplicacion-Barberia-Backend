@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -105,5 +106,19 @@ public class ReservaService {
           throw new BusinessException("hay cruce de horario: el barbero " + barbero.getPersona().getNombre() + " esta ocupado", HttpStatus.BAD_REQUEST);
       }
   }
+
+  public List<ReservaDTO> ListarReservasPorCliente(Integer clienteId){
+      List<Reserva> reservas = reservaRepository.findByCliente_ClienteId(clienteId);
+
+      return reservaMapper.toDtoLista(reservas);
+  }
+
+  public List<ReservaDTO> ListarReservasAdmin(){
+      return reservaRepository.findAll().stream().map(reservaMapper::toDto).toList();
+  }
+
+    public List<ReservaDTO> ListarReservasBarbero(Integer barberoId){
+        return reservaRepository.findAll().stream().map(reservaMapper::toDto).toList();
+    }
 
 }

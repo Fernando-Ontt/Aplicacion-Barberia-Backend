@@ -1,6 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.reserva.controller;
 
-import com.sistemabarberia.fadex_backend.commons.response.ApiResponse;
+import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 import com.sistemabarberia.fadex_backend.modules.reserva.dto.Request.ReservaRequest;
 import com.sistemabarberia.fadex_backend.modules.reserva.dto.Response.ReservaDTO;
 
@@ -10,15 +10,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/reservas")
-public class ReservaController {
+public class ReservaControllerCliente {
 
     private final ReservaService reservaService;
 
@@ -29,5 +29,12 @@ public class ReservaController {
     public ResponseEntity<ReservaDTO> crearReserva(@RequestBody @Valid ReservaRequest request){
 
         return ResponseEntity.status(HttpStatus.CREATED).body(reservaService.crearReserva(request));
+    }
+
+    @PreAuthorize("hasAuthority('RESERVA_READ_SELF')")
+    @GetMapping("/mis-reservas")
+    public ResponseEntity<List<ReservaDTO>> obtenerReservasCliente(Authentication auth){
+        Usuario usuario =  (Usuario) auth.getPrincipal();
+      return ResponseEntity.ok(reservaService.ListarReservasPorCliente(usuario.getIdUsuario()));
     }
 }
