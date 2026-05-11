@@ -6,6 +6,8 @@ import com.sistemabarberia.fadex_backend.modules.reserva.entity.Reserva;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface ReservaMapper {
 
@@ -16,4 +18,6 @@ public interface ReservaMapper {
     @Mapping(target = "servicio", source = "reserva.servicio.nombre")
     @Mapping(target = "tipoReserva", source = "reserva.tipoReserva")
     ReservaDTO toDto(Reserva reserva);
+
+    List<ReservaDTO> toDtoLista(List<Reserva> reservas);
 }
