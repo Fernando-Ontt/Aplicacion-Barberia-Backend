@@ -31,6 +31,7 @@ public class ProductoController {
         return ResponseEntity.ok(ApiResponse.ok("Productos  obtenidos correctamente", productos));
     }
 
+    @PreAuthorize("hasAuthority('PRODUCTO_READ')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductoResponse>> obtenerPorId(@PathVariable Long id) {
         ProductoResponse producto = productoService.obtenerProductoPorId(id);
@@ -51,18 +52,21 @@ public class ProductoController {
         return ResponseEntity.ok(ApiResponse.ok("Producto actualizado correctamente", producto));
     }
 
+    @PreAuthorize("hasAuthority('PRODUCTO_UPDATE')")
     @PatchMapping("/{id}/estado")
     public ResponseEntity<ApiResponse<ProductoResponse>> cambiarEstadoProducto(@PathVariable Long id, @RequestParam boolean estado) {
         ProductoResponse producto = productoService.cambiarEstadoProducto(id, estado);
         return ResponseEntity.ok(ApiResponse.ok("Estado actualizado correctamente", producto));
     }
 
+    @PreAuthorize("hasAuthority('PRODUCTO_UPDATE')")
     @PatchMapping("/{id}/publicacion")
     public ResponseEntity<ApiResponse<ProductoResponse>> cambiarPublicacion(@PathVariable Long id, @RequestParam boolean publicado) {
         ProductoResponse producto = productoService.cambiarPublicacion(id, publicado);
         return ResponseEntity.ok(ApiResponse.ok("Publicación actualizada correctamente", producto));
     }
 
+    @PreAuthorize("hasAuthority('PRODUCTO_DELETE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         productoService.eliminarProducto(id);
