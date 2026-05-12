@@ -14,7 +14,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
 @Slf4j
@@ -31,7 +30,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusiness(BusinessException e) {
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(e.getStatus())
                 .body(ApiResponse.error(e.getMessage()));
     }
 
@@ -52,8 +51,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Error de validación", errores));
     }
 
-
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneral(Exception e) {
         log.error("Error inesperado: {}", e.getMessage(), e);
@@ -69,8 +66,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
     public ResponseEntity<ApiResponse<Void>> handleAuthorizationDenied() {
-
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("no tienes permisos para este recurso"));
+                .body(ApiResponse.error("No tienes permisos para este recurso"));
     }
 }

@@ -14,7 +14,6 @@ import com.sistemabarberia.fadex_backend.modules.producto.repository.ProductoRep
 import com.sistemabarberia.fadex_backend.modules.producto.service.IProductoService;
 import com.sistemabarberia.fadex_backend.modules.producto.specs.ProductoSpecification;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -27,16 +26,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ProductoService implements IProductoService {
-
-    @Autowired
-    private ProductoRepository productoRepository;
-    @Autowired
-    private CategoriaRepository categoriaRepository;
-    @Autowired
-    private ProductoMapper productoMapper;
-    @Autowired
-    private FileStorageService fileStorageService;
-
+    private final ProductoRepository productoRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final ProductoMapper productoMapper;
+    private final FileStorageService fileStorageService;
     private static final List<String> TIPOS_IMAGEN = List.of("image/jpeg", "image/png", "image/webp");
 
     @Override
@@ -103,14 +96,18 @@ public class ProductoService implements IProductoService {
     }
 
     @Override
+    public ProductoResponse cambiarPublicacion(Long id, boolean publicado) {
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> new BusinessException("Producto no encontrado", HttpStatus.NOT_FOUND));
+        producto.setPublicado(publicado);
+        Producto actualizado = productoRepository.save(producto);
+        return productoMapper.toResponse(actualizado);
+    }
+
+    @Override
     public void eliminarProducto(Long id) {
         Producto producto = productoRepository.findById(id).orElseThrow(() -> new BusinessException("Producto no encontrado", HttpStatus.NOT_FOUND));
         for (String url : producto.getUrlsMultimedia()) {
-            try {
-                fileStorageService.eliminarArchivo(url);
-            } catch (Exception e) {
-                throw new BusinessException("Archivo no eliminado", HttpStatus.BAD_REQUEST);
-            }
+            fileStorageService.eliminarArchivo(url);
         }
         productoRepository.delete(producto);
     }
