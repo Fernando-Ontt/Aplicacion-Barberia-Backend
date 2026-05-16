@@ -4,12 +4,10 @@ import com.sistemabarberia.fadex_backend.auth.rol.Entity.Rol;
 import com.sistemabarberia.fadex_backend.auth.rol.Entity.RolRepository;
 import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 import com.sistemabarberia.fadex_backend.auth.usuario.Repository.UsuarioRepository;
-import com.sistemabarberia.fadex_backend.auth.usuario.dto.request.CreateBarberoRequest;
-import com.sistemabarberia.fadex_backend.auth.usuario.dto.request.CreateClienteRequest;
-import com.sistemabarberia.fadex_backend.auth.usuario.dto.request.CreateUsuarioRequest;
-import com.sistemabarberia.fadex_backend.auth.usuario.dto.request.RegisterRequest;
+import com.sistemabarberia.fadex_backend.auth.usuario.dto.request.*;
 import com.sistemabarberia.fadex_backend.auth.usuario.dto.response.UsuarioResponse;
 import com.sistemabarberia.fadex_backend.auth.usuario.service.IUsuarioService;
+import com.sistemabarberia.fadex_backend.commons.exception.ResourceNotFoundException;
 import com.sistemabarberia.fadex_backend.modules.barbero.entity.Barbero;
 import com.sistemabarberia.fadex_backend.modules.barbero.repository.BarberoRepository;
 import com.sistemabarberia.fadex_backend.modules.cliente.entity.Cliente;
@@ -110,6 +108,39 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
         clienteRepository.save(cliente);
         return toResponse(usuario, persona);
+    }
+
+    @Override
+    public void resetPassword(Integer idUsuario, ResetPasswordRequest request) {
+
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Usuario no encontrado")
+                );
+
+        usuario.setPassword(
+                passwordEncoder.encode(request.getNewPassword())
+        );
+
+        usuarioRepository.save(usuario);
+    }
+
+    @Override
+    public void updateUsername(Integer id, UpdateUsernameRequest request) {
+
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Usuario no encontrado")
+                );
+
+        if (usuarioRepository.existsByUser(request.getUsername())) {
+            throw new BusinessException(
+                    "El nombre de usuario ya existe",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+        usuario.setUser(request.getUsername());
+        usuarioRepository.save(usuario);
     }
 
     // ─── HELPERS PRIVADOS ────────────────────────────────────────────────────

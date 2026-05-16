@@ -1,10 +1,7 @@
 package com.sistemabarberia.fadex_backend.auth.usuario.controller;
 
 
-import com.sistemabarberia.fadex_backend.auth.usuario.dto.request.CreateBarberoRequest;
-import com.sistemabarberia.fadex_backend.auth.usuario.dto.request.CreateClienteRequest;
-import com.sistemabarberia.fadex_backend.auth.usuario.dto.request.CreateUsuarioRequest;
-import com.sistemabarberia.fadex_backend.auth.usuario.dto.request.RegisterRequest;
+import com.sistemabarberia.fadex_backend.auth.usuario.dto.request.*;
 import com.sistemabarberia.fadex_backend.auth.usuario.dto.response.UsuarioResponse;
 import com.sistemabarberia.fadex_backend.auth.usuario.service.IUsuarioService;
 import com.sistemabarberia.fadex_backend.commons.response.ApiResponse;
@@ -62,5 +59,36 @@ public class UsuarioController {
             @Valid @RequestBody CreateClienteRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Cliente creado correctamente", usuarioService.crearCliente(request)));
+    }
+
+
+
+    @PutMapping("/{id}/reset-password")
+    @PreAuthorize("hasRole('admin')")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @PathVariable Integer id,
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
+
+        usuarioService.resetPassword(id, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.ok("Contraseña reseteada correctamente")
+        );
+    }
+
+
+    @PatchMapping("/{id}/username-update")
+    @PreAuthorize("hasRole('admin')")
+    public ResponseEntity<ApiResponse<Void>> updateUsername(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateUsernameRequest request
+    ) {
+
+        usuarioService.updateUsername(id, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.ok("Usuario actualizado correctamente")
+        );
     }
 }
