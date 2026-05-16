@@ -59,6 +59,19 @@ public class SecurityConfig {
                                 "/uploads/**"
                         ).permitAll()
 
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/usuarios/barbero",
+                                "/api/v1/usuarios/cliente",
+                                "/api/v1/usuarios/admin"
+                        ).hasRole("admin")
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/usuarios/**"
+                        ).hasAnyRole("admin")
+
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/usuarios/**"
+                        ).hasRole("admin")
 
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/servicios/**",
