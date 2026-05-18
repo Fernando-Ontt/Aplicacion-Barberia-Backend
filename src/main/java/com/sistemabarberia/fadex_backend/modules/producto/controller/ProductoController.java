@@ -45,28 +45,28 @@ public class ProductoController {
         return ResponseEntity.ok(ApiResponse.ok("Producto creado correctamente", producto));
     }
 
-    @PreAuthorize("hasAuthority('PRODUCTO_UPDATE')")
+    @PreAuthorize("hasAuthority('PRODUCTO_UPDATE_ALL')")
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ProductoResponse>> actualizar(@PathVariable Long id, @RequestPart("producto") ProductoRequest request, @RequestPart(value = "archivos", required = false) List<MultipartFile> archivos) {
         ProductoResponse producto = productoService.actualizarProducto(id, request, archivos);
         return ResponseEntity.ok(ApiResponse.ok("Producto actualizado correctamente", producto));
     }
 
-    @PreAuthorize("hasAuthority('PRODUCTO_UPDATE')")
+    @PreAuthorize("hasAuthority('PRODUCTO_UPDATE_ALL')")
     @PatchMapping("/{id}/estado")
     public ResponseEntity<ApiResponse<ProductoResponse>> cambiarEstadoProducto(@PathVariable Long id, @RequestParam boolean estado) {
         ProductoResponse producto = productoService.cambiarEstadoProducto(id, estado);
         return ResponseEntity.ok(ApiResponse.ok("Estado actualizado correctamente", producto));
     }
 
-    @PreAuthorize("hasAuthority('PRODUCTO_UPDATE')")
+    @PreAuthorize("hasAuthority('PRODUCTO_UPDATE_ALL')")
     @PatchMapping("/{id}/publicacion")
     public ResponseEntity<ApiResponse<ProductoResponse>> cambiarPublicacion(@PathVariable Long id, @RequestParam boolean publicado) {
         ProductoResponse producto = productoService.cambiarPublicacion(id, publicado);
         return ResponseEntity.ok(ApiResponse.ok("Publicación actualizada correctamente", producto));
     }
 
-    @PreAuthorize("hasAuthority('PRODUCTO_DELETE')")
+    @PreAuthorize("hasAuthority('PRODUCTO_DELETE_ALL')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         productoService.eliminarProducto(id);
