@@ -28,5 +28,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     @EntityGraph(attributePaths = "roles")
     List<Usuario> findAll();
     boolean existsByUser(String user);
+    boolean existsByCorreo(String correo);
 
 }
