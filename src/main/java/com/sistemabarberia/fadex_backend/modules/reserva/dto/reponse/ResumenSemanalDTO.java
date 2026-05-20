@@ -1,8 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.reserva.dto.reponse;
 
 import lombok.*;
-
-import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -13,9 +11,6 @@ import java.util.List;
 public class ResumenSemanalDTO {
 
     private List<DiaSemana> dias;
-    private BigDecimal sueldoBase;
-    private BigDecimal comisionSemanal;
-    private BigDecimal totalSemana;
 
     @Getter
     @Setter
@@ -24,7 +19,5 @@ public class ResumenSemanalDTO {
         private String fecha;
         private long atendidos;
         private long cancelados;
-        private BigDecimal ingresos;
-
     }
 }
