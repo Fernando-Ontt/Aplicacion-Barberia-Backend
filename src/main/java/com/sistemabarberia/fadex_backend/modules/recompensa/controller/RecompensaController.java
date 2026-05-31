@@ -6,6 +6,7 @@ import com.sistemabarberia.fadex_backend.modules.recompensa.dto.response.Recompe
 import com.sistemabarberia.fadex_backend.modules.recompensa.service.IRecompensaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +21,7 @@ public class RecompensaController {
     // CLIENTE AUTENTICADO — tarjeta propia
     // ─────────────────────────────────────────────────────────────────────────
 
+    @PreAuthorize("hasAuthority('ROLE_cliente')")
     @GetMapping("/mi-tarjeta")
     public ResponseEntity<ApiResponse<RecompensaResponseDTO>> obtenerTarjetaPropia(
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -34,6 +36,7 @@ public class RecompensaController {
     // ADMIN / BARBERO — consulta por clienteId
     // ─────────────────────────────────────────────────────────────────────────
 
+    @PreAuthorize("hasAnyAuthority('ROLE_admin', 'ROLE_barbero')")
     @GetMapping("/{clienteId}")
     public ResponseEntity<ApiResponse<RecompensaResponseDTO>> obtenerTarjeta(
             @PathVariable Integer clienteId

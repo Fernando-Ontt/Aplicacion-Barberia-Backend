@@ -16,31 +16,31 @@ public interface RecompensaRepository extends JpaRepository<Recompensa, Integer>
 
     Optional<Recompensa> findByCliente_Persona_Usuario_IdUsuario(Integer usuarioId);
 
-    // Suma +1 al acumulado y si llega a 10 otorga un corte gratis y resetea
     @Modifying
     @Query(value = """
-            UPDATE recompensa
-            SET cortes_acumulados  = CASE
-                                        WHEN cortes_acumulados + 1 >= 10 THEN 0
-                                        ELSE cortes_acumulados + 1
-                                     END,
-                cortes_gratis      = CASE
-                                        WHEN cortes_acumulados + 1 >= 10 THEN cortes_gratis + 1
-                                        ELSE cortes_gratis
-                                     END,
-                fecha_actualizacion = NOW()
-            WHERE id_cliente = :clienteId
-            """, nativeQuery = true)
+        UPDATE recompensa
+        SET cortes_acumulados  = CASE
+                                    WHEN cortes_acumulados + 1 >= 10 THEN 10
+                                    ELSE cortes_acumulados + 1
+                                 END,
+            cortes_gratis      = CASE
+                                    WHEN cortes_acumulados + 1 >= 10 THEN cortes_gratis + 1
+                                    ELSE cortes_gratis
+                                 END,
+            fecha_actualizacion = NOW()
+        WHERE id_cliente = :clienteId
+        """, nativeQuery = true)
     void acumularCorte(@Param("clienteId") Integer clienteId);
 
-    // Descuenta un corte gratis al canjearlo
+    // DESPUÉS — descuenta gratis Y resetea el contador
     @Modifying
     @Query(value = """
-            UPDATE recompensa
-            SET cortes_gratis       = cortes_gratis - 1,
-                fecha_actualizacion = NOW()
-            WHERE id_cliente = :clienteId
-              AND cortes_gratis > 0
-            """, nativeQuery = true)
+        UPDATE recompensa
+        SET cortes_gratis       = cortes_gratis - 1,
+            cortes_acumulados   = 0,
+            fecha_actualizacion = NOW()
+        WHERE id_cliente = :clienteId
+          AND cortes_gratis > 0
+        """, nativeQuery = true)
     int canjearCorteGratis(@Param("clienteId") Integer clienteId);
 }

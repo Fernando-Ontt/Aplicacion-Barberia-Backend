@@ -93,7 +93,7 @@ public class ClienteServiceImpl implements IClienteService {
         Cliente cliente = mapper.toEntity(dto, persona);
         Cliente guardado = clienteRepository.save(cliente);
 
-        // ✅ Se crea la tarjeta de recompensas automáticamente
+        // Se crea la tarjeta de recompensas automáticamente
         Recompensa recompensa = Recompensa.builder()
                 .cliente(guardado)
                 .cortesAcumulados(0)

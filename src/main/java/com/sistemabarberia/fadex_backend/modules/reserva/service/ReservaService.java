@@ -206,10 +206,6 @@ public class ReservaService {
         reserva.setHoraFin(LocalTime.now());
         Reserva guardada = reservaRepository.save(reserva);
 
-        if (reserva.getTipoReserva() != TipoReserva.RESERVA_GRATIS) {
-            recompensaService.acumularCorte(reserva.getCliente().getClienteId());
-        }
-
         return reservaMapper.toDto(guardada);
     }
 
