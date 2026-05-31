@@ -22,8 +22,11 @@ import com.sistemabarberia.fadex_backend.modules.cliente.entity.Cliente;
 import com.sistemabarberia.fadex_backend.modules.cliente.repository.ClienteRepository;
 import com.sistemabarberia.fadex_backend.modules.persona.entity.Persona;
 import com.sistemabarberia.fadex_backend.modules.persona.repository.PersonaRepository;
+import com.sistemabarberia.fadex_backend.modules.recompensa.entity.Recompensa;
+import com.sistemabarberia.fadex_backend.modules.recompensa.repository.RecompensaRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +36,7 @@ import com.sistemabarberia.fadex_backend.commons.exception.BusinessException;
 import org.springframework.http.HttpStatus;
 
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -96,6 +100,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
         Barbero barbero = Barbero.builder()
                 .persona(persona)
+                .activo(true)
                 .experiencia(req.getExperiencia())
                 .sueldo(req.getSueldo())
                 .comision(req.getComision())
@@ -108,6 +113,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
         return toResponse(usuario, persona);
     }
 
+    @Autowired
+    private RecompensaRepository recompensaRepository;
+
     @Override
     @Transactional
     public UsuarioResponse crearCliente(CreateClienteRequest req) {
@@ -116,9 +124,20 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
         Cliente cliente = Cliente.builder()
                 .persona(persona)
+                .activo(true)        // ← también faltaba esto
                 .build();
 
-        clienteRepository.save(cliente);
+        Cliente guardado = clienteRepository.save(cliente);
+
+        // Crear tarjeta de recompensas automáticamente
+        Recompensa recompensa = Recompensa.builder()
+                .cliente(guardado)
+                .cortesAcumulados(0)
+                .cortesGratis(0)
+                .fechaActualizacion(LocalDateTime.now())
+                .build();
+        recompensaRepository.save(recompensa);
+
         return toResponse(usuario, persona);
     }
 
@@ -447,18 +466,18 @@ public class UsuarioServiceImpl implements IUsuarioService {
     }
 
 
-        @Override
-        public List<RolResponse> listarRoles() {
+    @Override
+    public List<RolResponse> listarRoles() {
 
-            return rolRepository.findAll()
-                    .stream()
-                    .map(rol -> RolResponse.builder()
-                            .idRol(rol.getIdRol())
-                            .nombre(rol.getNombre())
-                            .build()
-                    )
-                    .toList();
-        }
+        return rolRepository.findAll()
+                .stream()
+                .map(rol -> RolResponse.builder()
+                        .idRol(rol.getIdRol())
+                        .nombre(rol.getNombre())
+                        .build()
+                )
+                .toList();
+    }
 
     @Override
     public List<RolResponse> obtenerRolesUsuario(Integer idUsuario) {

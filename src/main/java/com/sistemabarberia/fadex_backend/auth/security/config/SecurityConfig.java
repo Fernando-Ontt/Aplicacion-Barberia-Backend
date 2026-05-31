@@ -58,10 +58,11 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/uploads/**"
                         ).permitAll()
-
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/usuarios/cliente"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/usuarios/barbero",
-                                "/api/v1/usuarios/cliente",
                                 "/api/v1/usuarios/admin"
                         ).hasRole("admin")
 
@@ -79,8 +80,10 @@ public class SecurityConfig {
                                 "/api/v1/barberos/**",
                                 "/api/v1/productos/**"
                         ).permitAll()
+
                         .requestMatchers("/api/v1/barbero/citas/**")
                         .hasAnyAuthority("ROLE_barbero", "ROLE_admin")
+
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/reservas/mis-reservas",
                                 "/api/v1/clientes/perfil-propio",
@@ -93,19 +96,44 @@ public class SecurityConfig {
                                 "/api/v1/reservas"
                         ).hasAnyAuthority("ROLE_barbero", "ROLE_admin", "ROLE_cliente")
 
-                        .anyRequest().authenticated()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/recompensas/mi-tarjeta"
+                        ).hasRole("cliente")
 
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/recompensas/**"
+                        ).hasAnyRole("admin", "barbero")
+
+                        // PAGOS
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/pagos/**"
+                        ).hasAnyRole("admin", "barbero")
+
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/pagos"
+                        ).hasAnyRole("admin", "barbero")
+
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/pagos/**"
+                        ).hasAnyRole("admin", "barbero")
+
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/v1/pagos/**"
+                        ).hasRole("admin")
+
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return  new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception{
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -115,7 +143,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of("http://localhost:4200"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
         config.setAllowedHeaders(List.of(
                 "Authorization",
