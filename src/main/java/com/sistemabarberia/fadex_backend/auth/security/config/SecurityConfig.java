@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -51,35 +52,88 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers(
+                                "/api/v1/auth/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/uploads/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/usuarios/cliente"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/usuarios/barbero",
+                                "/api/v1/usuarios/admin"
+                        ).hasRole("admin")
 
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/usuarios/**").permitAll()
-                        .requestMatchers("/api/v1/barberos/**").permitAll()
-                        .requestMatchers("/api/v1/clientes/**").permitAll()
-                        .requestMatchers("/api/v1/personas/**").permitAll()
-                        .requestMatchers("/api/v1/categorias/**").permitAll()
-                        .requestMatchers("/api/v1/usuarios/**").permitAll()
-                        .requestMatchers("/api/v1/productos/**").permitAll()
-                        .requestMatchers("/api/v1/cortes/**").permitAll()
-                        .requestMatchers("/api/v1/ventas/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/usuarios/**"
+                        ).hasAnyRole("admin")
 
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/usuarios/**"
+                        ).hasRole("admin")
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/servicios/**",
+                                "/api/v1/categorias/**",
+                                "/api/v1/barberos/**",
+                                "/api/v1/productos/**"
+                        ).permitAll()
+
+                        .requestMatchers("/api/v1/barbero/citas/**")
+                        .hasAnyAuthority("ROLE_barbero", "ROLE_admin")
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/reservas/mis-reservas",
+                                "/api/v1/clientes/perfil-propio",
+                                "/api/v1/clientes/perfil-propio/resumen",
+                                "/api/v1/servicio",
+                                "/api/v1/servicio/**"
+                        ).hasRole("cliente")
+
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/reservas"
+                        ).hasAnyAuthority("ROLE_barbero", "ROLE_admin", "ROLE_cliente")
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/recompensas/mi-tarjeta"
+                        ).hasRole("cliente")
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/recompensas/**"
+                        ).hasAnyRole("admin", "barbero")
+
+                        // PAGOS
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/pagos/**"
+                        ).hasAnyRole("admin", "barbero")
+
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/pagos"
+                        ).hasAnyRole("admin", "barbero")
+
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/pagos/**"
+                        ).hasAnyRole("admin", "barbero")
+
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/v1/pagos/**"
+                        ).hasRole("admin")
 
                         .anyRequest().authenticated()
-
                 )
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return  new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception{
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -89,7 +143,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of("http://localhost:4200"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
         config.setAllowedHeaders(List.of(
                 "Authorization",
