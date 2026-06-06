@@ -125,5 +125,12 @@ WHERE
             @Param("idUsuario") Integer idUsuario,
             Pageable pageable
     );
+    Optional<Usuario> findByCorreo(String correo);
+    @Query("""
+        SELECT u
+        FROM Usuario u
+        WHERE u.correo = :correo
+    """)
+    Optional<Usuario> buscarPorCorreo(@Param("correo") String correo);
 
 }
