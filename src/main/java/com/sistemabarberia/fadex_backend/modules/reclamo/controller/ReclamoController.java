@@ -55,6 +55,13 @@ public class ReclamoController {
         return ResponseEntity.ok(ApiResponse.ok("Reclamos obtenidos correctamente", reclamos));
     }
 
+    //@PreAuthorize("hasAuthority('RECLAMO_UPDATE_ALL')")
+    @PutMapping("/{id}/solucion")
+    public ResponseEntity<ApiResponse<ReclamoResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody ReclamoSolucionRequest request) {
+        ReclamoResponse reclamo = reclamoService.actualizarReclamoSolucion(id, request);
+        return ResponseEntity.ok(ApiResponse.ok("Reclamo actualizado correctamente", reclamo));
+    }
+
     //@PreAuthorize("hasAuthority('RECLAMO_READ')")
     @GetMapping("/resumen")
     public ResponseEntity<ApiResponse<ReclamoResumen>> resumen() {
@@ -62,4 +69,10 @@ public class ReclamoController {
         return ResponseEntity.ok(ApiResponse.ok("Resumen obtenido correctamente", resumen));
     }
 
+    //@PreAuthorize("hasAuthority('RECLAMO_DELETE_ALL')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        reclamoService.eliminarReclamo(id);
+        return ResponseEntity.ok(ApiResponse.ok("Reclamo eliminado correctamente"));
+    }
 }

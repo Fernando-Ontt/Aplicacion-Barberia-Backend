@@ -17,5 +17,7 @@ public interface IReclamoService {
     ReclamoResponse crearReclamoPublico(ReclamoPublicoRequest request, List<MultipartFile> archivos);
     ReclamoResponse obtenerReclamoPorId(Long id);
     PageResponse<ReclamoResponse> listarReclamoFiltros(ReclamoFiltro filtro, Pageable pageable);
+    ReclamoResponse actualizarReclamoSolucion(Long id, ReclamoSolucionRequest request);
     ReclamoResumen obtenerReclamoResumen();
+    void eliminarReclamo(Long id);
 }

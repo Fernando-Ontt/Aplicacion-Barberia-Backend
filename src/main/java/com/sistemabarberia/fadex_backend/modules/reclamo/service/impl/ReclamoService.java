@@ -126,6 +126,36 @@ public class ReclamoService implements IReclamoService {
         return PageResponse.of(page);
     }
 
+    @Override
+    @Transactional
+    public ReclamoResponse actualizarReclamoSolucion(Long id, ReclamoSolucionRequest request) {
+        Reclamo reclamo = reclamoRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Reclamo no encontrado"));
+        if (reclamo.getEstadoReclamo() == EstadoReclamo.CERRADO || reclamo.getEstadoReclamo() == EstadoReclamo.ANULADO) {
+            throw new BusinessException("El reclamo ya no puede ser modificado.", HttpStatus.BAD_REQUEST);
+        }
+        if ((request.getEstadoReclamo() == EstadoReclamo.RESUELTO || request.getEstadoReclamo() == EstadoReclamo.CERRADO) && request.getSolucionReclamo() == null) {
+            throw new BusinessException("Debe indicar una solución para finalizar el reclamo.", HttpStatus.BAD_REQUEST);
+        }
+        reclamo.setEstadoReclamo(request.getEstadoReclamo());
+        reclamo.setSolucionReclamo(request.getSolucionReclamo());
+        if (request.getNotasInternas() != null) {
+            reclamo.setNotasInternas(request.getNotasInternas());
+        }
+        if (request.getMontoCompensado() != null) {
+            if (request.getMontoCompensado().signum() < 0) {
+                throw new BusinessException("El monto compensado no puede ser negativo.", HttpStatus.BAD_REQUEST);
+            }
+            reclamo.setMontoCompensado(request.getMontoCompensado());
+        }
+        if (request.getEstadoReclamo() == EstadoReclamo.RESUELTO || request.getEstadoReclamo() == EstadoReclamo.CERRADO) {
+            reclamo.setFechaResolucion(LocalDateTime.now());
+        }
+        reclamo = reclamoRepository.save(reclamo);
+        if (reclamo.getCorreoCliente() != null && !reclamo.getCorreoCliente().isBlank()) {
+            emailService.enviarCambioEstado(reclamo.getCorreoCliente(), reclamo.getNombreCliente(), reclamo.getNumeroReclamo(), reclamo.getEstadoReclamo().name());
+        }
+        return mapToResponse(reclamo);
+    }
 
     @Override
     @Transactional
@@ -138,6 +168,15 @@ public class ReclamoService implements IReclamoService {
                 .anulados(reclamoRepository.countByEstadoReclamo(EstadoReclamo.ANULADO))
                 .total(reclamoRepository.count())
                 .build();
+    }
+
+    @Override
+    public void eliminarReclamo(Long id) {
+        Reclamo reclamo = reclamoRepository.findByIdReclamo(id).orElseThrow(() -> new ResourceNotFoundException("Reclamo no encontrado"));
+        for (ReclamoAdjunto adjunto : reclamo.getAdjuntos()) {
+            fileStorageService.eliminarArchivo(adjunto.getNombreArchivo());
+        }
+        reclamoRepository.delete(reclamo);
     }
 
     //helpers
