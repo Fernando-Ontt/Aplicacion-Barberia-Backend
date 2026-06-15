@@ -1986,6 +1986,313 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Reclamos",
+      "item": [
+        {
+          "name": "listar ReclamoPorID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/reclamos/2",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "reclamos",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listar Resumen",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/reclamos/resumen",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "reclamos",
+                "resumen"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listar ReclamoFiltros",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/reclamos",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "reclamos"
+              ],
+              "query": [
+                {
+                  "key": "numeroReclamo",
+                  "value": "REC-20260614-000",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "estado",
+                  "value": "ABIERTO",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "tipoProblema",
+                  "value": "CORTE_INCORRECTO",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "clienteId",
+                  "value": "1",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "empleadoId",
+                  "value": "3",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaInicio",
+                  "value": "2025-06-01",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaFin",
+                  "value": "2025-06-30",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Reclamo Interno",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "reclamo",
+                  "value": "{\n  \"idCliente\": 5,\n  \"idVenta\": 48,\n  \"nombreCliente\": \"JORGE DAVID Cruz\" ,\n  \"correoCliente\": \"jdcruzp22@gmail.com\",\n  \"telefonoCliente\": \"993888777\",\n  \"tipoDocumentoCliente\": \"DNI\",\n  \"numeroDocumentoCliente\": \"12445678\",\n  \"tipoReclamacion\": \"QUEJA\",\n  \"tipoProblema\": \"DEMORA_EN_ATENCION\",\n  \"causaReclamo\": \"MALA_ATENCION\",\n  \"descripcion\": \"El servicio demoró demasiado.\",\n  \"montoReclamado\": 50.00,\n  \"fechaOcurrencia\": \"2026-06-14T10:30:00\",\n  \"notasInternas\": \"Cliente molesto\",\n  \"idUsuarioResponsable\": 2\n}",
+                  "type": "text",
+                  "uuid": "807d3c6f-ba02-48c0-97c0-1ce426e137ca",
+                  "contentType": "application/json"
+                },
+                {
+                  "key": "archivos",
+                  "type": "file",
+                  "uuid": "40782075-6ee2-4fb3-b0fd-171a53ce9f48",
+                  "src": "/C:/Users/David/Downloads/imagen de reclamo.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{api}}/reclamos",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "reclamos"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": "",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear ReclamoPublico",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "reclamo",
+                  "value": "{\n  \"nombres\": \"jorge David jorvix\",\n  \"apellidos\": \"cruz peña\",\n  \"email\": \"jdcruzp22@gmail.com\",\n  \"telefono\": \"999888777\",\n  \"tipoDocumento\": \"DNI\",\n  \"numeroDocumento\": \"12345678\",\n  \"tipoReclamacion\": \"RECLAMO\",\n  \"tipoProblema\": \"SERVICIO_DEFECTUOSO\",\n  \"descripcion\": \"El corte estuvo mal realizado.\",\n  \"montoReclamado\": 30.00,\n  \"fechaOcurrencia\": \"2026-06-14T09:00:00\"\n}",
+                  "type": "text",
+                  "uuid": "807d3c6f-ba02-48c0-97c0-1ce426e137ca",
+                  "contentType": "application/json"
+                },
+                {
+                  "key": "archivos",
+                  "type": "file",
+                  "uuid": "d78ebe19-8461-48a1-819c-b89b793fa985",
+                  "src": "/C:/Users/David/Downloads/imagen de reclamo.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{api}}/reclamos/publico",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "reclamos",
+                "publico"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Solucion",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"estadoReclamo\": \"RESUELTO\",\r\n  \"solucionReclamo\": \"CAMBIO_PRODUCTO\",\r\n  \"notasInternas\": \"Se devolvió el dinero.\",\r\n  \"montoCompensado\": 50.00\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api}}/reclamos/3/solucion",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "reclamos",
+                "3",
+                "solucion"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": "",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Reclamo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api}}/reclamos/1",
+              "host": [
+                "{{api}}"
+              ],
+              "path": [
+                "reclamos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [

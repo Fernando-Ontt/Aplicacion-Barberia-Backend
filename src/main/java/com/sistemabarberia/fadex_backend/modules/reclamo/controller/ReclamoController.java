@@ -28,7 +28,7 @@ public class ReclamoController {
 
     private final IReclamoService reclamoService;
 
-   //@PreAuthorize("hasAuthority('RECLAMO_CREATE')")
+   @PreAuthorize("hasAuthority('RECLAMO_CREATE')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ReclamoResponse>> crear(@RequestPart("reclamo") @Valid ReclamoRequest request, @RequestPart(value = "archivos", required = false) List<MultipartFile> archivos) {
         ReclamoResponse reclamo = reclamoService.crearReclamo(request, archivos);
@@ -41,35 +41,35 @@ public class ReclamoController {
         return ResponseEntity.ok(ApiResponse.ok("Reclamo registrado correctamente", reclamo));
     }
 
-    //@PreAuthorize("hasAuthority('RECLAMO_READ')")
+    @PreAuthorize("hasAuthority('RECLAMO_READ')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ReclamoResponse>> obtener(@PathVariable Long id) {
         ReclamoResponse reclamo = reclamoService.obtenerReclamoPorId(id);
         return ResponseEntity.ok(ApiResponse.ok("Reclamo obtenido correctamente", reclamo));
     }
 
-    //@PreAuthorize("hasAuthority('RECLAMO_READ')")
+    @PreAuthorize("hasAuthority('RECLAMO_READ')")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ReclamoResponse>>> listar(@Valid @ModelAttribute ReclamoFiltro filtro, @PageableDefault(size = 10, page = 0) Pageable pageable) {
         PageResponse<ReclamoResponse> reclamos = reclamoService.listarReclamoFiltros(filtro, pageable);
         return ResponseEntity.ok(ApiResponse.ok("Reclamos obtenidos correctamente", reclamos));
     }
 
-    //@PreAuthorize("hasAuthority('RECLAMO_UPDATE_ALL')")
+    @PreAuthorize("hasAuthority('RECLAMO_UPDATE_ALL')")
     @PutMapping("/{id}/solucion")
     public ResponseEntity<ApiResponse<ReclamoResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody ReclamoSolucionRequest request) {
         ReclamoResponse reclamo = reclamoService.actualizarReclamoSolucion(id, request);
         return ResponseEntity.ok(ApiResponse.ok("Reclamo actualizado correctamente", reclamo));
     }
 
-    //@PreAuthorize("hasAuthority('RECLAMO_READ')")
+    @PreAuthorize("hasAuthority('RECLAMO_READ')")
     @GetMapping("/resumen")
     public ResponseEntity<ApiResponse<ReclamoResumen>> resumen() {
         ReclamoResumen resumen = reclamoService.obtenerReclamoResumen();
         return ResponseEntity.ok(ApiResponse.ok("Resumen obtenido correctamente", resumen));
     }
 
-    //@PreAuthorize("hasAuthority('RECLAMO_DELETE_ALL')")
+    @PreAuthorize("hasAuthority('RECLAMO_DELETE_ALL')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         reclamoService.eliminarReclamo(id);

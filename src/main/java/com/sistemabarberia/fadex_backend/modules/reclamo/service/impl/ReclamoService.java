@@ -182,7 +182,7 @@ public class ReclamoService implements IReclamoService {
     //helpers
     private String generarNumeroReclamo() {
         LocalDate fecha = LocalDate.now();
-        long correlativo = reclamoRepository.contarReclamosPorFecha(fecha) + 1;
+        long correlativo = reclamoRepository.nextSecuenciaReclamo();
         return "REC-%s-%04d".formatted(fecha.format(DateTimeFormatter.BASIC_ISO_DATE), correlativo);
     }
 

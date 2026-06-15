@@ -1,5 +1,3 @@
-ALTER TABLE cortes
-ADD COLUMN descripcion TEXT;
 
 INSERT INTO permiso (nombre) VALUES
 
@@ -24,3 +22,4 @@ AND p.nombre IN (
 
 )
 ON CONFLICT DO NOTHING;
+CREATE SEQUENCE IF NOT EXISTS seq_numero_reclamo START 1;
