@@ -35,4 +35,10 @@ public class ReclamoController {
         return ResponseEntity.ok(ApiResponse.ok("Reclamo creado correctamente", reclamo));
     }
 
+    @PostMapping(value = "/publico", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ReclamoResponse>> crearPublico(@RequestPart("reclamo") @Valid ReclamoPublicoRequest request, @RequestPart(value = "archivos", required = false) List<MultipartFile> archivos) {
+        ReclamoResponse reclamo = reclamoService.crearReclamoPublico(request, archivos);
+        return ResponseEntity.ok(ApiResponse.ok("Reclamo registrado correctamente", reclamo));
+    }
+
 }

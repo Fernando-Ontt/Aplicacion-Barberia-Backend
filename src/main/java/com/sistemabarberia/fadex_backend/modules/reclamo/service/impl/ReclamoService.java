@@ -85,6 +85,33 @@ public class ReclamoService implements IReclamoService {
         return mapToResponse(reclamo);
     }
 
+    @Override
+    @Transactional
+    public ReclamoResponse crearReclamoPublico(ReclamoPublicoRequest request, List<MultipartFile> archivos) {
+        if (request.getIdVenta() != null && request.getIdReserva() != null) {
+            throw new BusinessException("Debe seleccionar una venta o una reserva.", HttpStatus.BAD_REQUEST);
+        }
+        Venta venta = obtenerVenta(request.getIdVenta());
+        Reserva reserva = obtenerReserva(request.getIdReserva());
+//        por el momento no esta mapeado el dni
+//        if (venta != null && venta.getCliente() != null && !venta.getCliente().getNumeroDocumento().equals(request.getNumeroDocumento())) {
+//            throw new BusinessException("La venta no pertenece al documento indicado.", HttpStatus.BAD_REQUEST);
+//        }
+//        if (reserva != null && reserva.getCliente() != null && !reserva.getCliente().getNumeroDocumento().equals(request.getNumeroDocumento())) {
+//            throw new BusinessException("La reserva no pertenece al documento indicado.", HttpStatus.BAD_REQUEST);
+//        }
+        Reclamo reclamo = Reclamo.builder()
+                .numeroReclamo(generarNumeroReclamo()).esPublico(true).usuarioResponsable(null).cliente(null).venta(venta).reserva(reserva)
+                .nombreCliente(request.getNombres().trim() + " " + request.getApellidos().trim()).correoCliente(request.getEmail()).telefonoCliente(request.getTelefono())
+                .tipoDocumentoCliente(request.getTipoDocumento()).numeroDocumentoCliente(request.getNumeroDocumento()).tipoReclamacion(request.getTipoReclamacion())
+                .tipoProblema(request.getTipoProblema()).descripcion(request.getDescripcion()).montoReclamado(request.getMontoReclamado())
+                .fechaOcurrencia(request.getFechaOcurrencia()).build();
+        reclamo = reclamoRepository.save(reclamo);
+        guardarAdjuntos(reclamo, archivos);
+        enviarCorreoConfirmacion(reclamo);
+        return mapToResponse(reclamo);
+    }
+
     //helpers
     private String generarNumeroReclamo() {
         LocalDate fecha = LocalDate.now();
@@ -100,6 +127,20 @@ public class ReclamoService implements IReclamoService {
                 .solucionReclamo(reclamo.getSolucionReclamo()).descripcion(reclamo.getDescripcion()).notasInternas(reclamo.getNotasInternas())
                 .montoReclamado(reclamo.getMontoReclamado()).montoCompensado(reclamo.getMontoCompensado()).fechaOcurrencia(reclamo.getFechaOcurrencia())
                 .fechaReclamo(reclamo.getFechaReclamo()).fechaResolucion(reclamo.getFechaResolucion()).esPublico(reclamo.isEsPublico()).adjuntos(null).build();
+    }
+
+    private ReclamoResponse mapToResponseDetalle(Reclamo reclamo) {
+        List<ReclamoAdjuntoResponse> adjuntos =
+                reclamo.getAdjuntos() == null ? Collections.emptyList() : reclamo.getAdjuntos()
+                        .stream().map(a -> ReclamoAdjuntoResponse.builder().idAdjunto(a.getIdAdjunto()).tipoAdjunto(a.getTipoAdjunto())
+                                .nombreOriginal(a.getNombreOriginal()).urlArchivo(a.getUrlArchivo()).fechaSubida(a.getFechaSubida()).build()).toList();
+        return ReclamoResponse.builder()
+                .idReclamo(reclamo.getIdReclamo()).numeroReclamo(reclamo.getNumeroReclamo()).nombreCliente(reclamo.getNombreCliente())
+                .correoCliente(reclamo.getCorreoCliente()).telefonoCliente(reclamo.getTelefonoCliente()).tipoReclamacion(reclamo.getTipoReclamacion())
+                .tipoProblema(reclamo.getTipoProblema()).causaReclamo(reclamo.getCausaReclamo()).estadoReclamo(reclamo.getEstadoReclamo())
+                .solucionReclamo(reclamo.getSolucionReclamo()).descripcion(reclamo.getDescripcion()).notasInternas(reclamo.getNotasInternas())
+                .montoReclamado(reclamo.getMontoReclamado()).montoCompensado(reclamo.getMontoCompensado()).fechaOcurrencia(reclamo.getFechaOcurrencia())
+                .fechaReclamo(reclamo.getFechaReclamo()).fechaResolucion(reclamo.getFechaResolucion()).esPublico(reclamo.isEsPublico()).adjuntos(adjuntos).build();
     }
 
     private void guardarAdjuntos(Reclamo reclamo, List<MultipartFile> archivos) {
