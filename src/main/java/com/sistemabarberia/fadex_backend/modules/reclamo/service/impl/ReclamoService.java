@@ -112,6 +112,34 @@ public class ReclamoService implements IReclamoService {
         return mapToResponse(reclamo);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ReclamoResponse obtenerReclamoPorId(Long id) {
+        Reclamo reclamo = reclamoRepository.findByIdReclamo(id).orElseThrow(() -> new ResourceNotFoundException("Reclamo no encontrado"));
+        return mapToResponseDetalle(reclamo);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ReclamoResponse> listarReclamoFiltros(ReclamoFiltro filtro, Pageable pageable) {
+        Page<ReclamoResponse> page = reclamoRepository.findAll(ReclamoSpecification.filtrar(filtro), pageable).map(this::mapToResponse);
+        return PageResponse.of(page);
+    }
+
+
+    @Override
+    @Transactional
+    public ReclamoResumen obtenerReclamoResumen() {
+        return ReclamoResumen.builder()
+                .abiertos(reclamoRepository.countByEstadoReclamo(EstadoReclamo.ABIERTO))
+                .enProceso(reclamoRepository.countByEstadoReclamo(EstadoReclamo.EN_PROCESO))
+                .resueltos(reclamoRepository.countByEstadoReclamo(EstadoReclamo.RESUELTO))
+                .cerrados(reclamoRepository.countByEstadoReclamo(EstadoReclamo.CERRADO))
+                .anulados(reclamoRepository.countByEstadoReclamo(EstadoReclamo.ANULADO))
+                .total(reclamoRepository.count())
+                .build();
+    }
+
     //helpers
     private String generarNumeroReclamo() {
         LocalDate fecha = LocalDate.now();

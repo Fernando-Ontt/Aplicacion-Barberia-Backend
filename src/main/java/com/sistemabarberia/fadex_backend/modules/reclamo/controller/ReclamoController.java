@@ -41,4 +41,25 @@ public class ReclamoController {
         return ResponseEntity.ok(ApiResponse.ok("Reclamo registrado correctamente", reclamo));
     }
 
+    //@PreAuthorize("hasAuthority('RECLAMO_READ')")
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ReclamoResponse>> obtener(@PathVariable Long id) {
+        ReclamoResponse reclamo = reclamoService.obtenerReclamoPorId(id);
+        return ResponseEntity.ok(ApiResponse.ok("Reclamo obtenido correctamente", reclamo));
+    }
+
+    //@PreAuthorize("hasAuthority('RECLAMO_READ')")
+    @GetMapping
+    public ResponseEntity<ApiResponse<PageResponse<ReclamoResponse>>> listar(@Valid @ModelAttribute ReclamoFiltro filtro, @PageableDefault(size = 10, page = 0) Pageable pageable) {
+        PageResponse<ReclamoResponse> reclamos = reclamoService.listarReclamoFiltros(filtro, pageable);
+        return ResponseEntity.ok(ApiResponse.ok("Reclamos obtenidos correctamente", reclamos));
+    }
+
+    //@PreAuthorize("hasAuthority('RECLAMO_READ')")
+    @GetMapping("/resumen")
+    public ResponseEntity<ApiResponse<ReclamoResumen>> resumen() {
+        ReclamoResumen resumen = reclamoService.obtenerReclamoResumen();
+        return ResponseEntity.ok(ApiResponse.ok("Resumen obtenido correctamente", resumen));
+    }
+
 }

@@ -15,4 +15,7 @@ import java.util.List;
 public interface IReclamoService {
     ReclamoResponse crearReclamo(ReclamoRequest request, List<MultipartFile> archivos);
     ReclamoResponse crearReclamoPublico(ReclamoPublicoRequest request, List<MultipartFile> archivos);
+    ReclamoResponse obtenerReclamoPorId(Long id);
+    PageResponse<ReclamoResponse> listarReclamoFiltros(ReclamoFiltro filtro, Pageable pageable);
+    ReclamoResumen obtenerReclamoResumen();
 }
