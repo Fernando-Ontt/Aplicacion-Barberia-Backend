@@ -9,9 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ServicioSpecification {
-
     public static Specification<Servicio> filtrar(ServicioFiltro filtro, List<Long> categoriasIds) {
-
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (filtro == null) {

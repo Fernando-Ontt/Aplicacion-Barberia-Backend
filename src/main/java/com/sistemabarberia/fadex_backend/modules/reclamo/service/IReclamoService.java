@@ -1,0 +1,17 @@
+package com.sistemabarberia.fadex_backend.modules.reclamo.service;
+
+import com.sistemabarberia.fadex_backend.commons.response.PageResponse;
+import com.sistemabarberia.fadex_backend.modules.reclamo.dto.ReclamoFiltro;
+import com.sistemabarberia.fadex_backend.modules.reclamo.dto.ReclamoResumen;
+import com.sistemabarberia.fadex_backend.modules.reclamo.dto.request.ReclamoPublicoRequest;
+import com.sistemabarberia.fadex_backend.modules.reclamo.dto.request.ReclamoRequest;
+import com.sistemabarberia.fadex_backend.modules.reclamo.dto.request.ReclamoSolucionRequest;
+import com.sistemabarberia.fadex_backend.modules.reclamo.dto.response.ReclamoResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+public interface IReclamoService {
+
+}
