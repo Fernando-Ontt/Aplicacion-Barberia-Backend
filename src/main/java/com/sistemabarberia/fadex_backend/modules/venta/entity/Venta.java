@@ -1,5 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.venta.entity;
 
+import com.sistemabarberia.fadex_backend.modules.barbero.entity.Barbero;
 import com.sistemabarberia.fadex_backend.modules.cliente.entity.Cliente;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,7 +29,11 @@ public class Venta {
     @ManyToOne
     @JoinColumn(name = "id_cliente")
     private Cliente cliente;
-    
+
+    @ManyToOne
+    @JoinColumn(name = "id_barbero")
+    private Barbero barbero;
+
     @Column(name = "fecha")
     private LocalDateTime fecha;
 
