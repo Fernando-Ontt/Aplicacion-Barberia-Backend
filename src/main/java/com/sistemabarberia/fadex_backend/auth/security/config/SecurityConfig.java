@@ -188,6 +188,11 @@ public class SecurityConfig {
                         // ─────────────────────────────────────────────
                         // DEFAULT
                         // ─────────────────────────────────────────────
+                        // ─────────────────────────────────────────────
+                        // PLANILLAS (ACCESO PARA TODOS LOS ROLES)
+                        // ─────────────────────────────────────────────
+                                .requestMatchers("/api/v1/planillas/**")
+                                .hasAnyRole("admin", "barbero", "cliente")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
