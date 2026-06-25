@@ -3,7 +3,7 @@ package com.sistemabarberia.fadex_backend.modules.ia.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.client.util.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -13,9 +13,18 @@ import org.springframework.web.client.RestTemplate;
 
 public class OpenAIService {
 
-    private String apiKey = "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";
-    private String apiUrl = "https://api.openai.com/v1/responses";
+    @Value("${openai.api.key}")
+    private String apiKey;
 
+    @Value("${openai.api.url}")
+    private String apiUrl;
+
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        System.out.println(" OPENAI CONFIG ");
+        System.out.println("URL: " + apiUrl);
+        System.out.println("KEY: " + (apiKey != null ? apiKey.substring(0, 10) + "..." : "NULL"));
+    }
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String consultarOpenAI(String prompt) {
