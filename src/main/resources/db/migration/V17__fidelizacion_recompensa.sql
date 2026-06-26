@@ -13,12 +13,19 @@ ALTER TABLE reclamos ADD COLUMN detalle_solucion TEXT;
 -- ============================================================
 
 -- ============================================================
+--  ENUMS DE APOYO
+-- ============================================================
+CREATE TYPE estado_recompensa AS ENUM ( 'PENDIENTE', 'CANJEADO', 'VENCIDO', 'ANULADO' );
+CREATE TYPE tipo_premio AS ENUM ( 'DESCUENTO', 'SERVICIO', 'PRODUCTO', 'CUPON');
+CREATE TYPE tipo_alcance_fidelizacion AS ENUM ( 'SERVICIO', 'PRODUCTO', 'COMBO', 'CATEGORIA');
+CREATE TYPE origen_fidelizacion AS ENUM ( 'RESERVA', 'VENTA', 'AJUSTE');
+
+-- ============================================================
 -- 1. FIDELIZACION_TARJETA
 -- Una tarjeta representa el progreso de un cliente dentro de una categoría de fidelización.
 -- Una tarjeta se reinicia cuando completa la meta definida para
 -- su categoría, otorgando uno o más giros según la configuración.
 -- ============================================================
-
 CREATE TABLE fidelizacion_tarjeta (
     id_tarjeta SERIAL PRIMARY KEY,
     id_cliente INT NOT NULL,
@@ -37,9 +44,6 @@ CREATE TABLE fidelizacion_tarjeta (
 CREATE INDEX idx_fidelizacion_cliente   ON fidelizacion_tarjeta(id_cliente);
 CREATE INDEX idx_fidelizacion_categoria ON fidelizacion_tarjeta(id_categoria);
 
-
-CREATE TYPE tipo_alcance_fidelizacion AS ENUM ( 'SERVICIO', 'PRODUCTO', 'COMBO', 'CATEGORIA');
-
 -- ============================================================
 -- 2 FIDELIZACION_REGLA
 -- Define qué servicios o productos otorgan puntos de
@@ -47,7 +51,6 @@ CREATE TYPE tipo_alcance_fidelizacion AS ENUM ( 'SERVICIO', 'PRODUCTO', 'COMBO',
 -- Cada regla pertenece a una categoría de fidelización y
 -- referencia únicamente un servicio o un producto.
 -- ============================================================
-
 CREATE TABLE fidelizacion_regla (
     id_regla SERIAL PRIMARY KEY,
     id_categoria INT NOT NULL,
@@ -84,9 +87,6 @@ CREATE INDEX idx_regla_categoria_activa ON fidelizacion_regla(id_categoria, acti
 --   • Ajustes manuales realizados por un administrador.
 -- Nunca debe modificarse una vez registrado; las correcciones se realizan agregando un nuevo movimiento.
 -- ============================================================
-
-CREATE TYPE origen_fidelizacion AS ENUM ( 'RESERVA', 'VENTA', 'AJUSTE');
-
 CREATE TABLE fidelizacion_movimiento (
     id_movimiento SERIAL PRIMARY KEY,
     id_tarjeta INT NOT NULL,
@@ -110,7 +110,6 @@ CREATE INDEX idx_movimiento_origen  ON fidelizacion_movimiento(origen, id_origen
 -- Una ruleta puede asociarse a una o varias categorías de fidelización mediante la tabla ruleta_categoria.
 -- El incremento_por_giro aumenta progresivamente la probabilidad del premio mayor según el historial del cliente.
 -- ============================================================
-
 CREATE TABLE ruleta (
     id_ruleta SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -132,7 +131,6 @@ CREATE TABLE ruleta (
 --   • Qué ruleta utilizar al completar la meta.
 -- Existe una única configuración por categoría.
 -- ============================================================
-
 CREATE TABLE fidelizacion_configuracion (
     id_configuracion SERIAL PRIMARY KEY,
     id_categoria INT NOT NULL UNIQUE,
@@ -152,7 +150,6 @@ CREATE TABLE fidelizacion_configuracion (
 -- Permite reutilizar una misma ruleta para múltiples categorías.
 -- El backend puede resolver categorías hijas automáticamente  utilizando la jerarquía definida en categoria.
 -- ============================================================
-
 CREATE TABLE ruleta_categoria (
     id_ruleta INT NOT NULL,
     id_categoria INT NOT NULL,
@@ -177,9 +174,6 @@ CREATE INDEX idx_config_ruleta ON fidelizacion_configuracion(id_ruleta);
 -- Solo un ítem por ruleta puede marcarse como premio mayor.
 -- El backend utiliza la probabilidad base para construir la  distribución final del giro.
 -- ============================================================
-
-CREATE TYPE tipo_premio AS ENUM ( 'DESCUENTO', 'SERVICIO', 'PRODUCTO', 'CUPON');
-
 CREATE TABLE ruleta_item (
     id_item SERIAL PRIMARY KEY,
     id_ruleta INT NOT NULL,
@@ -216,7 +210,6 @@ CREATE UNIQUE INDEX uq_ruleta_premio_mayor ON ruleta_item(id_ruleta) WHERE es_pr
 -- Esta información nunca debe modificarse ya que constituye la
 -- auditoría del algoritmo de selección de premios.
 -- ============================================================
-
 CREATE TABLE ruleta_giro (
     id_giro SERIAL PRIMARY KEY,
     id_tarjeta INT NOT NULL,
@@ -238,12 +231,7 @@ CREATE INDEX idx_giro_tarjeta ON ruleta_giro(id_tarjeta);
 CREATE INDEX idx_giro_fecha   ON ruleta_giro(fecha);
 
 -- ============================================================
--- 7. ESTADO_RECOMPENSA
--- ============================================================
-CREATE TYPE estado_recompensa AS ENUM ( 'PENDIENTE', 'CANJEADO', 'VENCIDO', 'ANULADO' );
-
--- ============================================================
--- 8. RECOMPENSA_OBTENIDA
+-- 7. RECOMPENSA_OBTENIDA
 -- Historial de recompensas obtenidas por los clientes.
 -- Se crea automáticamente al finalizar un giro.
 -- El estado controla el ciclo de vida del premio:
@@ -253,7 +241,6 @@ CREATE TYPE estado_recompensa AS ENUM ( 'PENDIENTE', 'CANJEADO', 'VENCIDO', 'ANU
 --   ANULADO   -> invalidado manualmente.
 -- El código de canje puede utilizarse para validar premios desde el panel administrativo o mediante QR en futuras versiones.
 -- ============================================================
-
 CREATE TABLE recompensa_obtenida (
     id_recompensa SERIAL PRIMARY KEY,
     id_giro INT NOT NULL,
@@ -277,44 +264,29 @@ CREATE INDEX idx_recompensa_cliente ON recompensa_obtenida(id_cliente);
 CREATE INDEX idx_recompensa_estado  ON recompensa_obtenida(estado);
 
 -- ============================================================
--- 9. PERMISOS DEL MÓDULO
+-- 8. PERMISOS DEL MÓDULO
 -- Permisos necesarios para administrar el módulo de fidelización.
 -- Admin: Configuración completa.
 -- Barbero: Consulta tarjetas y procesa canjes.
 -- Cliente:  Consulta progreso, realiza giros y visualiza recompensas.
 -- ============================================================
-
-INSERT INTO permiso (nombre) VALUES
-    ('FIDELIZACION_READ'),
-    ('FIDELIZACION_MANAGE'),
-    ('RULETA_READ'),
-    ('RULETA_MANAGE'),
-    ('GIRO_REALIZAR'),
-    ('RECOMPENSA_READ'),
-    ('RECOMPENSA_CANJEAR')
-ON CONFLICT (nombre) DO NOTHING;
+INSERT INTO permiso (nombre) VALUES('FIDELIZACION_READ'),('FIDELIZACION_MANAGE'),('RULETA_READ'),('RULETA_MANAGE'),('GIRO_REALIZAR'),('RECOMPENSA_READ'),('RECOMPENSA_CANJEAR') ON CONFLICT (nombre) DO NOTHING;
 
 -- Admin: control total
 INSERT INTO rol_permiso (id_rol, id_permiso)
 SELECT r.id_rol, p.id_permiso
 FROM rol r JOIN permiso p ON TRUE
-WHERE r.nombre = 'admin'
-  AND p.nombre IN ( 'FIDELIZACION_READ', 'FIDELIZACION_MANAGE', 'RULETA_READ', 'RULETA_MANAGE', 'GIRO_REALIZAR', 'RECOMPENSA_READ', 'RECOMPENSA_CANJEAR' )
-ON CONFLICT DO NOTHING;
+WHERE r.nombre = 'admin' AND p.nombre IN ( 'FIDELIZACION_READ', 'FIDELIZACION_MANAGE', 'RULETA_READ', 'RULETA_MANAGE', 'GIRO_REALIZAR', 'RECOMPENSA_READ', 'RECOMPENSA_CANJEAR' ) ON CONFLICT DO NOTHING;
 
 -- Barbero: puede ver tarjetas y validar canjes presencialmente
 INSERT INTO rol_permiso (id_rol, id_permiso)
 SELECT r.id_rol, p.id_permiso
 FROM rol r JOIN permiso p ON TRUE
-WHERE r.nombre = 'barbero'
-  AND p.nombre IN ( 'FIDELIZACION_READ', 'RULETA_READ', 'RECOMPENSA_READ', 'RECOMPENSA_CANJEAR')
-ON CONFLICT DO NOTHING;
+WHERE r.nombre = 'barbero' AND p.nombre IN ( 'FIDELIZACION_READ', 'RULETA_READ', 'RECOMPENSA_READ', 'RECOMPENSA_CANJEAR') ON CONFLICT DO NOTHING;
 
 -- Cliente: ve su tarjeta, gira y consulta sus premios
 INSERT INTO rol_permiso (id_rol, id_permiso)
 SELECT r.id_rol, p.id_permiso
 FROM rol r JOIN permiso p ON TRUE
-WHERE r.nombre = 'cliente'
-  AND p.nombre IN ( 'FIDELIZACION_READ', 'RULETA_READ', 'GIRO_REALIZAR', 'RECOMPENSA_READ' )
-ON CONFLICT DO NOTHING;
+WHERE r.nombre = 'cliente' AND p.nombre IN ( 'FIDELIZACION_READ', 'RULETA_READ', 'GIRO_REALIZAR', 'RECOMPENSA_READ' ) ON CONFLICT DO NOTHING;
 

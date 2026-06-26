@@ -134,6 +134,12 @@ public class ReclamoService implements IReclamoService {
         }
         reclamo.setEstadoReclamo(request.getEstadoReclamo());
         reclamo.setSolucionReclamo(request.getSolucionReclamo());
+        if ((request.getEstadoReclamo() == EstadoReclamo.RESUELTO || request.getEstadoReclamo() == EstadoReclamo.CERRADO) && (request.getDetalleSolucion() == null || request.getDetalleSolucion().isBlank())) {
+            throw new BusinessException("Debe indicar el detalle de la solución realizada.", HttpStatus.BAD_REQUEST);
+        }
+        if (request.getDetalleSolucion() != null) {
+            reclamo.setDetalleSolucion(request.getDetalleSolucion());
+        }
         if (request.getNotasInternas() != null) {
             reclamo.setNotasInternas(request.getNotasInternas());
         }
@@ -155,6 +161,8 @@ public class ReclamoService implements IReclamoService {
                     .tipoReclamacion(reclamo.getTipoReclamacion() != null ? reclamo.getTipoReclamacion().name() : null)
                     .tipoProblema(reclamo.getTipoProblema() != null ? reclamo.getTipoProblema().name() : null)
                     .estado(reclamo.getEstadoReclamo().name())
+                    .solucionReclamo(reclamo.getSolucionReclamo() != null ? reclamo.getSolucionReclamo().name() : null)
+                    .detalleSolucion(reclamo.getDetalleSolucion())
                     .fechaReclamo(reclamo.getFechaReclamo())
                     .build();
 
