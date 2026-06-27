@@ -1,6 +1,7 @@
 package com.sistemabarberia.fadex_backend.modules.ruleta.ruleta.entity;
 
 import com.sistemabarberia.fadex_backend.commons.shared.AuditableEntity;
+import com.sistemabarberia.fadex_backend.modules.ruleta.ruleta.entity.enums.TipoRuleta;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -27,8 +28,9 @@ public class Ruleta extends AuditableEntity {
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(length = 50)
-    private String tipo;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private TipoRuleta tipo;
 
     @Builder.Default
     @Column(nullable = false)
@@ -37,5 +39,4 @@ public class Ruleta extends AuditableEntity {
     @Builder.Default
     @Column(name = "incremento_por_giro", nullable = false, precision = 6, scale = 4)
     private BigDecimal incrementoPorGiro = BigDecimal.ZERO;
-
 }

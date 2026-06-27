@@ -1,4 +1,4 @@
-package com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.service.imp;
+package com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.service.impl;
 
 import com.sistemabarberia.fadex_backend.commons.exception.BusinessException;
 import com.sistemabarberia.fadex_backend.commons.response.PageResponse;
