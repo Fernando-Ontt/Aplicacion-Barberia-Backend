@@ -13,6 +13,7 @@ public class FidelizacionConfiguracionSpecification {
     public static Specification<FidelizacionConfiguracion> conFiltros(ConfiguracionFiltro filtro) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
             if (filtro.getActiva() != null) {
                 predicates.add(cb.equal(root.get("activa"), filtro.getActiva()));
             }
@@ -40,6 +41,7 @@ public class FidelizacionConfiguracionSpecification {
             if (filtro.getMetaHasta() != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("meta"), filtro.getMetaHasta()));
             }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
