@@ -24,13 +24,13 @@ public class RuletaItemController {
     private final IRuletaItemService service;
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('RULETA_VIEW')")
+    @PreAuthorize("hasAuthority('RULETA_READ')")
     public ResponseEntity<ApiResponse<RuletaItemResponseDTO>> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok("Item obtenido correctamente.", service.obtenerItemPorId(id)));
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('RULETA_VIEW')")
+    @PreAuthorize("hasAuthority('RULETA_READ')")
     public ResponseEntity<ApiResponse<PageResponse<RuletaItemResponseDTO>>> listar(RuletaItemFiltro filtro, Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.ok("Listado obtenido correctamente.", service.listarItemConFiltros(filtro, pageable)));
     }

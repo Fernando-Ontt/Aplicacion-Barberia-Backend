@@ -3,9 +3,9 @@ package com.sistemabarberia.fadex_backend.modules.ruleta.recompensa.entity;
 import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 import com.sistemabarberia.fadex_backend.commons.shared.AuditableEntity;
 import com.sistemabarberia.fadex_backend.modules.cliente.entity.Cliente;
+import com.sistemabarberia.fadex_backend.modules.ruleta.recompensa.entity.enums.EstadoRecompensa;
 import com.sistemabarberia.fadex_backend.modules.ruleta.giro.entity.RuletaGiro;
 import com.sistemabarberia.fadex_backend.modules.ruleta.item.entity.RuletaItem;
-import com.sistemabarberia.fadex_backend.modules.ruleta.recompensa.entity.enums.EstadoRecompensa;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -24,7 +24,7 @@ public class RecompensaObtenida extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_recompensa")
-    private Integer recompensaId;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_giro", nullable = false)
@@ -40,16 +40,19 @@ public class RecompensaObtenida extends AuditableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EstadoRecompensa estado;
+    @Builder.Default
+    private EstadoRecompensa estado = EstadoRecompensa.PENDIENTE;
 
+    @Column(length = 255)
     private String observacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_canje")
     private Usuario usuarioCanje;
 
-    @Column(name = "fecha_obtencion")
-    private LocalDateTime fechaObtencion;
+    @Column(name = "fecha_obtencion", nullable = false)
+    @Builder.Default
+    private LocalDateTime fechaObtencion = LocalDateTime.now();
 
     @Column(name = "fecha_vencimiento")
     private LocalDateTime fechaVencimiento;
@@ -57,13 +60,6 @@ public class RecompensaObtenida extends AuditableEntity {
     @Column(name = "fecha_canje")
     private LocalDateTime fechaCanje;
 
-    @Column(name = "codigo_canje", unique = true, length = 50)
+    @Column(name = "codigo_canje", length = 50)
     private String codigoCanje;
-
-    @PrePersist
-    public void prePersist() {
-        if (fechaObtencion == null) {
-            fechaObtencion = LocalDateTime.now();
-        }
-    }
 }
