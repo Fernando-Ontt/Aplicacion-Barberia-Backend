@@ -247,4 +247,29 @@ AND (:metodoPago IS NULL OR p.metodo::TEXT = :metodoPago)
             @Param("estado") String estado,
             @Param("metodoPago") String metodoPago
     );
+    @Query(value = """
+        SELECT r FROM Reserva r
+        LEFT JOIN FETCH r.barbero b
+        LEFT JOIN FETCH r.servicio s
+        WHERE r.cliente.clienteId = :clienteId
+          AND (:estado IS NULL OR r.estadoReserva = :estado)
+          AND (CAST(:desde AS date) IS NULL OR r.fecha >= :desde)
+          AND (CAST(:hasta AS date) IS NULL OR r.fecha <= :hasta)
+        ORDER BY r.fecha DESC, r.horaInicio DESC
+    """,
+            countQuery = """
+        SELECT COUNT(r) FROM Reserva r
+        WHERE r.cliente.clienteId = :clienteId
+          AND (:estado IS NULL OR r.estadoReserva = :estado)
+          AND (CAST(:desde AS date) IS NULL OR r.fecha >= :desde)
+          AND (CAST(:hasta AS date) IS NULL OR r.fecha <= :hasta)
+    """)
+    Page<Reserva> findHistorialByClienteFiltros(
+            @Param("clienteId") Integer clienteId,
+            @Param("estado") EstadoReserva estado,
+            @Param("desde") LocalDate desde,
+            @Param("hasta") LocalDate hasta,
+            Pageable pageable
+    );
+
 }
