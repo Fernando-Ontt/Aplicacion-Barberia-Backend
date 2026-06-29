@@ -62,4 +62,22 @@ public class ReservaControllerCliente {
                 ApiResponse.ok("Reservas pendientes obtenidas correctamente", pendientes)
         );
     }
+
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<ApiResponse<ReservaDTO>> cancelar(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok("Reserva cancelada correctamente",
+                        reservaService.cancelarReserva(id)
+                )
+        );
+    }
+    @PatchMapping("/{id}/pagar")
+    public ResponseEntity<ApiResponse<ReservaDTO>> pagar(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok("Reserva pagada exitosamente",
+                        reservaService.PagarReserva(id)
+                )
+        );
+    }
+
 }
