@@ -427,4 +427,43 @@ public class ReservaService {
         }).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public Page<HistorialClienteResponseDTO> getHistorialCliente(
+            Usuario usuario,
+            EstadoReserva estado,
+            LocalDate desde,
+            LocalDate hasta,
+            Pageable pageable) {
+
+        Cliente cliente = clienteRepository
+                .findByPersona_Usuario_IdUsuario(usuario.getIdUsuario())
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado para el usuario actual"));
+
+        Page<Reserva> reservasPage = reservaRepository.findHistorialByClienteFiltros(
+                cliente.getClienteId(), estado, desde, hasta, pageable
+        );
+
+        return reservasPage.map(r -> {
+            String nombreBarbero = (r.getBarbero() != null && r.getBarbero().getPersona() != null)
+                    ? r.getBarbero().getPersona().getNombre() + " " + r.getBarbero().getPersona().getApellido()
+                    : "Sin asignar";
+
+            String nombreServicio = (r.getServicio() != null)
+                    ? r.getServicio().getNombre()
+                    : "Sin servicio";
+
+            return HistorialClienteResponseDTO.builder()
+                    .id(r.getId())
+                    .fecha(r.getFecha())
+                    .horaInicio(r.getHoraInicio())
+                    .horaFin(r.getHoraFin())
+                    .estadoReserva(r.getEstadoReserva())
+                    .tipoReserva(r.getTipoReserva())
+                    .nombreBarbero(nombreBarbero)
+                    .nombreServicio(nombreServicio)
+                    .total(r.getTotal())
+                    .observacion(r.getObservacion())
+                    .build();
+        });
+    }
 }
