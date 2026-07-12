@@ -6,6 +6,7 @@ import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.entity.Fid
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.service.IFidelizacionTarjetaService;
 import com.sistemabarberia.fadex_backend.modules.reserva.entity.Reserva;
 import com.sistemabarberia.fadex_backend.modules.venta.entity.Venta;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class FidelizacionEngineImpl implements IFidelizacionEngine {
 
     private final IFidelizacionTarjetaService tarjetaService;

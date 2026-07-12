@@ -1,7 +1,8 @@
 package com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.controller;
 
 import com.sistemabarberia.fadex_backend.commons.response.ApiResponse;
-import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.dto.response.FidelizacionDashboardResponseDTO;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.dto.response.FidelizacionDashboardAdminResponseDTO;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.dto.response.FidelizacionDashboardClienteResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.service.IFidelizacionDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +16,15 @@ public class FidelizacionDashboardController {
 
     private final IFidelizacionDashboardService dashboardService;
 
-    @GetMapping
+    @GetMapping("/cliente")
     @PreAuthorize("hasAuthority('FIDELIZACION_READ')")
-    public ResponseEntity<ApiResponse<FidelizacionDashboardResponseDTO>> obtenerDashboard() {
-        return ResponseEntity.ok(ApiResponse.ok("Dashboard obtenido correctamente.", dashboardService.obtenerMiDashboard()));
+    public ResponseEntity<ApiResponse<FidelizacionDashboardClienteResponseDTO>> dashboardCliente() {
+        return ResponseEntity.ok(ApiResponse.ok("Dashboard obtenido correctamente.", dashboardService.obtenerDashboardCliente()));
+    }
+
+    @GetMapping("/admin")
+    @PreAuthorize("hasAuthority('FIDELIZACION_MANAGE')")
+    public ResponseEntity<ApiResponse<FidelizacionDashboardAdminResponseDTO>> dashboardAdmin() {
+        return ResponseEntity.ok(ApiResponse.ok("Dashboard obtenido correctamente.", dashboardService.obtenerDashboardAdmin()));
     }
 }

@@ -19,6 +19,7 @@ import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.entity.Fid
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.repository.FidelizacionTarjetaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -103,6 +104,12 @@ public class FidelizacionMovimientoServiceImpl implements IFidelizacionMovimient
         Usuario usuario = usuarioSecurityService.getUsuarioLogueado();
         Cliente cliente = clienteRepository.findByUsuarioId(usuario.getIdUsuario()).orElseThrow(() -> new BusinessException("Cliente no encontrado.", HttpStatus.NOT_FOUND));
         return movimientoMapper.toResponseList(movimientoRepository.findByClienteClienteIdOrderByCreatedAtDesc(cliente.getClienteId()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FidelizacionMovimientoResponseDTO> obtenerUltimosMovimientos(int limite) {
+        return movimientoRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, limite)).stream().map(movimientoMapper::toResponse).toList();
     }
 
     private FidelizacionTarjeta obtenerTarjeta(Long id) {

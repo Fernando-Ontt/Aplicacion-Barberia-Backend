@@ -2,6 +2,7 @@ package com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.ser
 
 import com.sistemabarberia.fadex_backend.commons.response.PageResponse;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.dto.ConfiguracionFiltro;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.dto.request.ConfiguracionPatchRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.dto.request.ConfiguracionRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.dto.response.ConfiguracionResponseDTO;
 
@@ -17,4 +18,6 @@ public interface IFidelizacionConfiguracionService {
     ConfiguracionResponseDTO actualizarConfiguracion(Long id, ConfiguracionRequestDTO dto);
     void eliminarConfiguracion(Long id);
     FidelizacionConfiguracion obtenerConfiguracionActiva(Long categoriaId);
+    Integer contarConfiguraciones();
+    ConfiguracionResponseDTO actualizarParcial(Long id, ConfiguracionPatchRequestDTO dto);
 }

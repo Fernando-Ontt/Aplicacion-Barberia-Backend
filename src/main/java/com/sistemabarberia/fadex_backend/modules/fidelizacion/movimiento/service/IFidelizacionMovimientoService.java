@@ -19,4 +19,5 @@ public interface IFidelizacionMovimientoService {
     void eliminarMovimiento(Long id);
     void registrarMovimiento(FidelizacionTarjeta tarjeta, OrigenFidelizacion origen, Long idOrigen, int puntos, String descripcion);
     List<FidelizacionMovimientoResponseDTO> obtenerMisMovimientos();
+    List<FidelizacionMovimientoResponseDTO> obtenerUltimosMovimientos(int limite);
 }

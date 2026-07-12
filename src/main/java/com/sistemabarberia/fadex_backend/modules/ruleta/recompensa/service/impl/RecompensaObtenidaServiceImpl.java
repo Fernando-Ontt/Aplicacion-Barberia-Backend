@@ -8,7 +8,6 @@ import com.sistemabarberia.fadex_backend.commons.response.PageResponse;
 import com.sistemabarberia.fadex_backend.modules.cliente.entity.Cliente;
 import com.sistemabarberia.fadex_backend.modules.cliente.repository.ClienteRepository;
 import com.sistemabarberia.fadex_backend.modules.cliente.service.IClienteService;
-import com.sistemabarberia.fadex_backend.modules.producto.entity.Producto;
 import com.sistemabarberia.fadex_backend.modules.producto.service.IProductoService;
 import com.sistemabarberia.fadex_backend.modules.reserva.entity.Reserva;
 import com.sistemabarberia.fadex_backend.modules.reserva.repository.ReservaRepository;
@@ -26,10 +25,10 @@ import com.sistemabarberia.fadex_backend.modules.ruleta.giro.entity.RuletaGiro;
 import com.sistemabarberia.fadex_backend.modules.ruleta.giro.repository.RuletaGiroRepository;
 import com.sistemabarberia.fadex_backend.modules.ruleta.item.entity.RuletaItem;
 import com.sistemabarberia.fadex_backend.modules.ruleta.item.repository.RuletaItemRepository;
-import com.sistemabarberia.fadex_backend.modules.servicio.entity.Servicio;
 import com.sistemabarberia.fadex_backend.modules.venta.entity.Venta;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -110,14 +109,8 @@ public class RecompensaObtenidaServiceImpl implements IRecompensaObtenidaService
         if (item.getTipoPremio() == TipoPremio.SIN_PREMIO) {
             throw new BusinessException("No se puede crear una recompensa para un item SIN_PREMIO.", HttpStatus.BAD_REQUEST);
         }
-        RecompensaObtenida recompensa = RecompensaObtenida.builder()
-                .giro(giro)
-                .cliente(cliente)
-                .item(item)
-                .estado(EstadoRecompensa.PENDIENTE)
-                .codigoCanje(generarCodigoCanje())
-                .fechaVencimiento(LocalDateTime.now().plusDays(30))
-                .build();
+        RecompensaObtenida recompensa = RecompensaObtenida.builder().giro(giro).cliente(cliente).item(item).estado(EstadoRecompensa.PENDIENTE).observacion("Premio obtenido desde la ruleta.")
+                .codigoCanje(generarCodigoCanje()).fechaObtencion(LocalDateTime.now()).fechaVencimiento(LocalDateTime.now().plusDays(30)).build();
         return recompensaObtenidaRepository.save(recompensa);
     }
 
@@ -154,6 +147,7 @@ public class RecompensaObtenidaServiceImpl implements IRecompensaObtenidaService
             recompensaObtenidaRepository.save(recompensa);
             throw new BusinessException("La recompensa está vencida.", HttpStatus.BAD_REQUEST);
         }
+        recompensa.setObservacion("Premio canjeado.");
         recompensa.setEstado(EstadoRecompensa.CANJEADO);
         recompensa.setFechaCanje(LocalDateTime.now());
         recompensa.setUsuarioCanje(usuario);
@@ -182,6 +176,7 @@ public class RecompensaObtenidaServiceImpl implements IRecompensaObtenidaService
                 recompensaObtenidaRepository.save(recompensa);
                 throw new BusinessException("La recompensa está vencida.", HttpStatus.BAD_REQUEST);
             }
+            recompensa.setObservacion("Premio aplicado en venta.");
             recompensa.setEstado(EstadoRecompensa.CANJEADO);
             recompensa.setFechaCanje(LocalDateTime.now());
             recompensa.setUsuarioCanje(usuario);
@@ -250,6 +245,7 @@ public class RecompensaObtenidaServiceImpl implements IRecompensaObtenidaService
                     throw new BusinessException("Una recompensa SIN_PREMIO no puede ser canjeada.", HttpStatus.BAD_REQUEST);
                 }
             }
+            recompensa.setObservacion("Premio aplicado en reserva.");
             recompensa.setEstado(EstadoRecompensa.CANJEADO);
             recompensa.setFechaCanje(LocalDateTime.now());
             recompensa.setUsuarioCanje(usuario);
@@ -263,6 +259,19 @@ public class RecompensaObtenidaServiceImpl implements IRecompensaObtenidaService
             reserva.setTotal(nuevoTotal);
         }
         return reservaRepository.save(reserva);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Integer contarRecompensas() {
+        return Math.toIntExact(recompensaObtenidaRepository.count());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RecompensaObtenidaResponseDTO> obtenerUltimasRecompensas(int limite) {
+        Pageable pageable = PageRequest.of(0, limite);
+        return recompensaObtenidaMapper.toResponseList(recompensaObtenidaRepository.findAllByOrderByCreatedAtDesc(pageable));
     }
 
     private String generarCodigoCanje() {

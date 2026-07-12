@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FidelizacionDashboardResponseDTO {
+public class FidelizacionDashboardClienteResponseDTO {
     private Integer totalTarjetas;
     private Integer girosDisponibles;
     private Integer tarjetasConGiroDisponible;

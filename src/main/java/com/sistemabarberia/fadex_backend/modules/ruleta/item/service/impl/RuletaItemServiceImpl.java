@@ -88,6 +88,14 @@ public class RuletaItemServiceImpl implements IRuletaItemService {
 
     @Override
     @Transactional
+    public RuletaItemResponseDTO cambiarEstado(Long id, Boolean activo) {
+        RuletaItem item = ruletaItemRepository.findById(id).orElseThrow(() -> new BusinessException("Item de ruleta no encontrado", HttpStatus.NOT_FOUND));
+        item.setActivo(activo);
+        return ruletaItemMapper.toResponse(ruletaItemRepository.save(item));
+    }
+
+    @Override
+    @Transactional
     public void eliminarItem(Long id) {
         RuletaItem item = ruletaItemRepository.findById(id).orElseThrow(() -> new BusinessException("Item de ruleta no encontrado", HttpStatus.NOT_FOUND));
         boolean imagenPropia = item.getProducto() == null && item.getServicio() == null && item.getImagenUrl() != null;

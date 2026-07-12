@@ -1,6 +1,8 @@
 package com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.service.impl;
 
-import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.dto.response.FidelizacionDashboardResponseDTO;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.service.IFidelizacionConfiguracionService;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.dto.response.FidelizacionDashboardAdminResponseDTO;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.dto.response.FidelizacionDashboardClienteResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.service.IFidelizacionDashboardService;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.movimiento.dto.response.FidelizacionMovimientoResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.movimiento.service.IFidelizacionMovimientoService;
@@ -25,10 +27,11 @@ public class FidelizacionDashboardServiceImpl implements IFidelizacionDashboardS
     private final IFidelizacionMovimientoService movimientoService;
     private final IRuletaGiroService giroService;
     private final IRecompensaObtenidaService recompensaService;
+    private final IFidelizacionConfiguracionService configuracionService;
 
     @Override
     @Transactional(readOnly = true)
-    public FidelizacionDashboardResponseDTO obtenerMiDashboard() {
+    public FidelizacionDashboardClienteResponseDTO obtenerDashboardCliente() {
         List<FidelizacionTarjetaResponseDTO> tarjetas = tarjetaService.obtenerMisTarjetas();
         List<FidelizacionMovimientoResponseDTO> movimientos = movimientoService.obtenerMisMovimientos();
         List<RuletaGiroResponseDTO> giros = giroService.obtenerMisGiros();
@@ -37,8 +40,16 @@ public class FidelizacionDashboardServiceImpl implements IFidelizacionDashboardS
         int girosDisponibles = tarjetas.stream().mapToInt(FidelizacionTarjetaResponseDTO::getGirosDisponibles).sum();
         int tarjetasConGiroDisponible = (int) tarjetas.stream().filter(t -> t.getGirosDisponibles() > 0).count();
         int recompensasPendientes = (int) recompensas.stream().filter(r -> r.getEstado() == EstadoRecompensa.PENDIENTE).count();
-        return FidelizacionDashboardResponseDTO.builder().totalTarjetas(totalTarjetas).girosDisponibles(girosDisponibles).tarjetasConGiroDisponible(tarjetasConGiroDisponible)
+        return FidelizacionDashboardClienteResponseDTO.builder().totalTarjetas(totalTarjetas).girosDisponibles(girosDisponibles).tarjetasConGiroDisponible(tarjetasConGiroDisponible)
                 .recompensasPendientes(recompensasPendientes).tarjetas(tarjetas).movimientosRecientes(movimientos.stream().limit(10).toList())
                 .ultimosGiros(giros.stream().limit(10).toList()).recompensas(recompensas).build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FidelizacionDashboardAdminResponseDTO obtenerDashboardAdmin() {
+        return FidelizacionDashboardAdminResponseDTO.builder().totalTarjetas(tarjetaService.contarTarjetas()).totalConfiguraciones(configuracionService.contarConfiguraciones())
+                .totalGiros(giroService.contarGiros()).totalRecompensas(recompensaService.contarRecompensas()).movimientosRecientes(movimientoService.obtenerUltimosMovimientos(10))
+                .ultimasRecompensas(recompensaService.obtenerUltimasRecompensas(10)).tarjetasPorCategoria(tarjetaService.obtenerTarjetasPorCategoria()).build();
     }
 }

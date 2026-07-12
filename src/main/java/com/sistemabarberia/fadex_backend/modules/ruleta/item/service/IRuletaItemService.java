@@ -17,6 +17,7 @@ public interface IRuletaItemService {
     RuletaItemResponseDTO obtenerItemPorId(Long id);
     RuletaItemResponseDTO crearItem(RuletaItemRequestDTO dto, MultipartFile imagen);
     RuletaItemResponseDTO actualizarItem(Long id, RuletaItemRequestDTO dto, MultipartFile imagen);
+    RuletaItemResponseDTO cambiarEstado(Long id, Boolean activo);
     void eliminarItem(Long id);
     List<RuletaItem> obtenerItemsActivos(Long ruletaId);
 }

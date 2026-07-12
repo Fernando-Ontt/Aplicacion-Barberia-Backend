@@ -26,4 +26,6 @@ public interface IRecompensaObtenidaService {
     RecompensaObtenidaResponseDTO canjearRecompensa(String codigoCanje);
     void aplicarRecompensas(List<Long> recompensaIds, Venta venta);
     Reserva aplicarRecompensas(Reserva reserva, Integer clienteId, List<Long> longs);
+    Integer contarRecompensas();
+    List<RecompensaObtenidaResponseDTO> obtenerUltimasRecompensas(int limite);
 }

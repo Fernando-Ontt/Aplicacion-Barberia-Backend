@@ -22,4 +22,6 @@ public interface IRuletaGiroService {
     RuletaGiro guardarGiro(FidelizacionTarjeta tarjeta, Cliente cliente, Ruleta ruleta, RuletaItem premio);
     List<RuletaGiroResponseDTO> obtenerMisGiros();
     RuletaGiroResponseDTO obtenerMiGiro(Long id);
+    Integer contarGiros();
+    List<RuletaGiroResponseDTO> obtenerUltimosGiros(int limite);
 }

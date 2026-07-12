@@ -12,7 +12,6 @@ import java.util.Optional;
 public interface FidelizacionConfiguracionRepository extends JpaRepository<FidelizacionConfiguracion, Long>, JpaSpecificationExecutor<FidelizacionConfiguracion> {
     Optional<FidelizacionConfiguracion> findByCategoria_IdAndActivaTrue(Long categoriaId);
     Optional<FidelizacionConfiguracion> findByCategoriaIdAndActivaTrue(Long categoriaId);
-    Optional<FidelizacionConfiguracion> findByCategoria_Id(Long categoriaId);
     boolean existsByCategoria_Id(Long categoriaId);
     Optional<FidelizacionConfiguracion> findByCategoriaIdAndActivaTrue(Integer categoriaId);
     List<FidelizacionConfiguracion> findByActivaTrueAndCrearTarjetaAutomaticaTrue();

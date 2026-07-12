@@ -32,6 +32,7 @@ public class RuletaCategoriaServiceImpl implements IRuletaCategoriaService {
     private final RuletaCategoriaMapper ruletaCategoriaMapper;
 
     @Override
+    @Transactional
     public RuletaCategoriaResponseDTO crearCategoria(RuletaCategoriaRequestDTO request) {
         Ruleta ruleta = ruletaRepository.findById(request.getIdRuleta()).orElseThrow(() -> new BusinessException("Ruleta no encontrada.", HttpStatus.NOT_FOUND));
         Categoria categoria = categoriaRepository.findById(request.getIdCategoria()).orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
@@ -42,6 +43,7 @@ public class RuletaCategoriaServiceImpl implements IRuletaCategoriaService {
     }
 
     @Override
+    @Transactional
     public RuletaCategoriaResponseDTO actualizarCategoria(Long id, RuletaCategoriaRequestDTO request) {
         RuletaCategoria entity = ruletaCategoriaRepository.findById(id).orElseThrow(() -> new BusinessException("Relación no encontrada", HttpStatus.NOT_FOUND));
         Ruleta ruleta = ruletaRepository.findById(request.getIdRuleta()).orElseThrow(() -> new BusinessException("Ruleta no encontrada.", HttpStatus.NOT_FOUND));
@@ -66,6 +68,7 @@ public class RuletaCategoriaServiceImpl implements IRuletaCategoriaService {
     }
 
     @Override
+    @Transactional
     public void eliminarCategoria(Long id) {
         RuletaCategoria entity = ruletaCategoriaRepository.findById(id).orElseThrow(() -> new BusinessException("Relación no encontrada.", HttpStatus.NOT_FOUND));
         ruletaCategoriaRepository.delete(entity);

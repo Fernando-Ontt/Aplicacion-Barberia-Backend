@@ -23,6 +23,7 @@ import com.sistemabarberia.fadex_backend.modules.ruleta.ruleta.entity.Ruleta;
 import com.sistemabarberia.fadex_backend.modules.ruleta.ruleta.repository.RuletaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -123,6 +124,19 @@ public class RuletaGiroServiceImpl implements IRuletaGiroService {
             throw new BusinessException("No tiene permiso para acceder a este giro.", HttpStatus.FORBIDDEN);
         }
         return giroMapper.toResponse(giro);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Integer contarGiros() {
+        return Math.toIntExact(giroRepository.count());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RuletaGiroResponseDTO> obtenerUltimosGiros(int limite) {
+        Pageable pageable = PageRequest.of(0, limite);
+        return giroMapper.toResponseList(giroRepository.findAllByOrderByCreatedAtDesc(pageable));
     }
 
     private FidelizacionTarjeta obtenerTarjeta(Long id) {

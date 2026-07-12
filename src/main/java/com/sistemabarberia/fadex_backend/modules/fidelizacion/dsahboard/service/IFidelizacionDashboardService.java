@@ -1,7 +1,9 @@
 package com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.service;
 
-import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.dto.response.FidelizacionDashboardResponseDTO;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.dto.response.FidelizacionDashboardAdminResponseDTO;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.dsahboard.dto.response.FidelizacionDashboardClienteResponseDTO;
 
 public interface IFidelizacionDashboardService {
-    FidelizacionDashboardResponseDTO obtenerMiDashboard();
+    FidelizacionDashboardClienteResponseDTO obtenerDashboardCliente();
+    FidelizacionDashboardAdminResponseDTO obtenerDashboardAdmin();
 }

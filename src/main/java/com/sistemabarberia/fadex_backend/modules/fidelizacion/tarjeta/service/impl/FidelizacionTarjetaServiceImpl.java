@@ -22,6 +22,7 @@ import com.sistemabarberia.fadex_backend.modules.fidelizacion.regla.repository.F
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.FidelizacionTarjetaFiltro;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.request.FidelizacionTarjetaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.response.FidelizacionTarjetaResponseDTO;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.response.TarjetasPorCategoriaResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.entity.FidelizacionTarjeta;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.mapper.FidelizacionTarjetaMapper;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.repository.FidelizacionTarjetaRepository;
@@ -291,5 +292,19 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
 
     private Categoria obtenerCategoria(Long id) {
         return categoriaRepository.findById(id).orElseThrow(() -> new BusinessException("Categoría no encontrada", HttpStatus.NOT_FOUND));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Integer contarTarjetas() {
+        return Math.toIntExact(tarjetaRepository.count());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TarjetasPorCategoriaResponseDTO> obtenerTarjetasPorCategoria() {
+        return tarjetaRepository.obtenerTarjetasPorCategoria().stream().map(r -> TarjetasPorCategoriaResponseDTO.builder()
+                        .categoriaId((Long) r[0]).categoriaNombre((String) r[1]).totalTarjetas(((Long) r[2]).intValue()).tarjetasConGiroDisponible(((Long) r[3]).intValue())
+                        .girosDisponibles(((Long) r[4]).intValue()).build()).toList();
     }
 }

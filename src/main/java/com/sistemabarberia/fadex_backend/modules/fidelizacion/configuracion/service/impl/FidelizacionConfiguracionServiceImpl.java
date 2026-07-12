@@ -5,6 +5,7 @@ import com.sistemabarberia.fadex_backend.commons.response.PageResponse;
 import com.sistemabarberia.fadex_backend.modules.categoria.entity.Categoria;
 import com.sistemabarberia.fadex_backend.modules.categoria.repository.CategoriaRepository;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.dto.ConfiguracionFiltro;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.dto.request.ConfiguracionPatchRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.dto.request.ConfiguracionRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.dto.response.ConfiguracionResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.configuracion.entity.FidelizacionConfiguracion;
@@ -65,6 +66,7 @@ public class FidelizacionConfiguracionServiceImpl implements IFidelizacionConfig
     }
 
     @Override
+    @Transactional
     public ConfiguracionResponseDTO crearConfiguracion(ConfiguracionRequestDTO dto) {
         if (configuracionRepository.existsByCategoria_Id(dto.getCategoriaId())) {
             throw new BusinessException("La categoría ya posee una configuración.", HttpStatus.BAD_REQUEST);
@@ -86,6 +88,7 @@ public class FidelizacionConfiguracionServiceImpl implements IFidelizacionConfig
     }
 
     @Override
+    @Transactional
     public ConfiguracionResponseDTO actualizarConfiguracion(Long id, ConfiguracionRequestDTO dto) {
         FidelizacionConfiguracion configuracion = configuracionRepository.findById(id).orElseThrow(() -> new BusinessException("Configuración no encontrada.", HttpStatus.NOT_FOUND));
         if (!configuracion.getCategoria().getId().equals(dto.getCategoriaId())) {
@@ -113,6 +116,7 @@ public class FidelizacionConfiguracionServiceImpl implements IFidelizacionConfig
     }
 
     @Override
+    @Transactional
     public void eliminarConfiguracion(Long id) {
         FidelizacionConfiguracion configuracion = configuracionRepository.findById(id).orElseThrow(() -> new BusinessException("Configuración no encontrada.", HttpStatus.NOT_FOUND));
         configuracionRepository.delete(configuracion);
@@ -122,5 +126,33 @@ public class FidelizacionConfiguracionServiceImpl implements IFidelizacionConfig
     @Transactional(readOnly = true)
     public FidelizacionConfiguracion obtenerConfiguracionActiva(Long categoriaId) {
         return configuracionRepository.findByCategoria_IdAndActivaTrue(categoriaId).orElseThrow(() -> new BusinessException("No existe una configuración activa para la categoría.", HttpStatus.NOT_FOUND));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Integer contarConfiguraciones() {
+        return Math.toIntExact(configuracionRepository.count());
+    }
+
+    @Override
+    @Transactional
+    public ConfiguracionResponseDTO actualizarParcial(Long id, ConfiguracionPatchRequestDTO dto) {
+        FidelizacionConfiguracion configuracion = configuracionRepository.findById(id).orElseThrow(() -> new BusinessException("Configuración no encontrada.", HttpStatus.NOT_FOUND));
+        switch (dto.getCampo()) {
+            case "activa": configuracion.setActiva(dto.getValor());
+                break;
+            case "mostrarSiempre": configuracion.setMostrarSiempre(dto.getValor());
+                break;
+            case "crearTarjetaAutomatica": boolean antes = Boolean.TRUE.equals(configuracion.getCrearTarjetaAutomatica());
+                configuracion.setCrearTarjetaAutomatica(dto.getValor());
+                if (!antes && Boolean.TRUE.equals(dto.getValor())) {
+                    tarjetaService.crearTarjetasParaCategoria(configuracion.getCategoria());
+                }
+                break;
+            default:
+                throw new BusinessException("Campo no permitido.", HttpStatus.BAD_REQUEST);
+        }
+        configuracion = configuracionRepository.save(configuracion);
+        return configuracionMapper.toResponse(configuracion);
     }
 }
