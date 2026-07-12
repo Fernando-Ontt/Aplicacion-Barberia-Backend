@@ -14,5 +14,6 @@ public class FidelizacionTarjetaResponseDTO {
     private Integer progreso;
     private Integer girosDisponibles;
     private Integer totalGiros;
+    private Boolean activo;
     private Boolean cicloActivo;
 }

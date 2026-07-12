@@ -29,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -98,11 +99,12 @@ public class RuletaGiroServiceImpl implements IRuletaGiroService {
 
     @Override
     @Transactional
-    public RuletaGiro guardarGiro(FidelizacionTarjeta tarjeta, Cliente cliente, Ruleta ruleta, RuletaItem premio) {
+    public RuletaGiro guardarGiro(FidelizacionTarjeta tarjeta, Cliente cliente, Ruleta ruleta, RuletaItem premio, Integer numeroGiro, BigDecimal anguloResultado, BigDecimal probFinal, BigDecimal probAplicada) {
         if (!tarjeta.getCliente().getClienteId().equals(cliente.getClienteId())) {
             throw new BusinessException("La tarjeta no pertenece al cliente.", HttpStatus.BAD_REQUEST);
         }
-        RuletaGiro giro = RuletaGiro.builder().tarjeta(tarjeta).cliente(cliente).ruleta(ruleta).item(premio).build();
+        RuletaGiro giro = RuletaGiro.builder().tarjeta(tarjeta).cliente(cliente).ruleta(ruleta).item(premio).numeroGiro(numeroGiro).anguloResultado(anguloResultado)
+                .probFinal(probFinal).probAplicada(probAplicada).build();
         return giroRepository.save(giro);
     }
 

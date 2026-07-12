@@ -11,6 +11,7 @@ import com.sistemabarberia.fadex_backend.modules.ruleta.item.entity.RuletaItem;
 import com.sistemabarberia.fadex_backend.modules.ruleta.ruleta.entity.Ruleta;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface IRuletaGiroService {
@@ -19,7 +20,7 @@ public interface IRuletaGiroService {
     RuletaGiroResponseDTO crearGiro(RuletaGiroRequestDTO dto);
     RuletaGiroResponseDTO actualizarGiro(Long id, RuletaGiroRequestDTO dto);
     void eliminarGiro(Long id);
-    RuletaGiro guardarGiro(FidelizacionTarjeta tarjeta, Cliente cliente, Ruleta ruleta, RuletaItem premio);
+    RuletaGiro guardarGiro(FidelizacionTarjeta tarjeta, Cliente cliente, Ruleta ruleta, RuletaItem premio, Integer numeroGiro, BigDecimal anguloResultado, BigDecimal probFinal, BigDecimal probAplicada);
     List<RuletaGiroResponseDTO> obtenerMisGiros();
     RuletaGiroResponseDTO obtenerMiGiro(Long id);
     Integer contarGiros();

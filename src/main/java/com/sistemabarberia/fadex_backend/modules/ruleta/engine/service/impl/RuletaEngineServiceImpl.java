@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -53,8 +54,8 @@ public class RuletaEngineServiceImpl implements IRuletaEngineService {
         ruletaValidator.validarRuletaListaParaGirar(items);
         ResultadoSeleccionRuleta resultado = ruletaValidator.seleccionarPorAngulo(items);
         RuletaItem premio = resultado.getItem();
-        double angulo = resultado.getAngulo();
-        RuletaGiro giro = giroService.guardarGiro(tarjeta, tarjeta.getCliente(), ruleta, premio);
+        BigDecimal angulo = resultado.getAngulo();
+        RuletaGiro giro = giroService.guardarGiro(tarjeta, tarjeta.getCliente(), ruleta, premio, resultado.getNumeroGiro(), angulo, resultado.getProbabilidadFinal(), resultado.getProbabilidadAplicada());
         RecompensaObtenida recompensa = null;
         if (premio.getTipoPremio() != TipoPremio.SIN_PREMIO) {
             recompensa = recompensaService.crearDesdeGiro(giro, tarjeta.getCliente(), premio);

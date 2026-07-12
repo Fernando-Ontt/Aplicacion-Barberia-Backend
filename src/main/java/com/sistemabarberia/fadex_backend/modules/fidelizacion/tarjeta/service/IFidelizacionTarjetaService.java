@@ -4,6 +4,7 @@ import com.sistemabarberia.fadex_backend.commons.response.PageResponse;
 import com.sistemabarberia.fadex_backend.modules.categoria.entity.Categoria;
 import com.sistemabarberia.fadex_backend.modules.cliente.entity.Cliente;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.FidelizacionTarjetaFiltro;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.request.FidelizacionTarjetaPatchRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.request.FidelizacionTarjetaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.response.FidelizacionTarjetaResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.response.TarjetasPorCategoriaResponseDTO;
@@ -33,4 +34,5 @@ public interface IFidelizacionTarjetaService {
     FidelizacionTarjeta obtenerMiTarjetaConGiro(Long tarjetaId);
     Integer contarTarjetas();
     List<TarjetasPorCategoriaResponseDTO> obtenerTarjetasPorCategoria();
+    FidelizacionTarjetaResponseDTO actualizarParcial(Long id, FidelizacionTarjetaPatchRequestDTO dto);
 }

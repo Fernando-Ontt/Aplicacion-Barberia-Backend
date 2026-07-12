@@ -6,7 +6,6 @@ import com.sistemabarberia.fadex_backend.modules.ruleta.ruleta.entity.Ruleta;
 import com.sistemabarberia.fadex_backend.modules.ruleta.validator.dto.ResultadoSeleccionRuleta;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
@@ -55,29 +54,22 @@ public class RuletaValidator {
         validarPremioMayor(items);
     }
 
-//    public RuletaItem seleccionarPorAngulo(List<RuletaItem> items) {
-//        List<RuletaItem> itemsOrdenados = items.stream().sorted(Comparator.comparing(RuletaItem::getOrdenDisplay)).toList();
-//        double angulo = ThreadLocalRandom.current().nextDouble(0, 360);
-//        double inicio = 0;
-//        for (RuletaItem item : itemsOrdenados) {
-//            double fin = inicio + item.getProbabilidad().doubleValue() * 3.6;
-//            if (angulo >= inicio && angulo < fin) {return item;}
-//            inicio = fin;
-//        }
-//        return itemsOrdenados.get(itemsOrdenados.size() - 1);
-//    }
-
     public ResultadoSeleccionRuleta seleccionarPorAngulo(List<RuletaItem> items) {
         List<RuletaItem> itemsOrdenados = items.stream().sorted(Comparator.comparing(RuletaItem::getOrdenDisplay)).toList();
         double angulo = ThreadLocalRandom.current().nextDouble(0, 360);
         double inicio = 0;
+        int numeroGiro = 1;
         for (RuletaItem item : itemsOrdenados) {
             double fin = inicio + item.getProbabilidad().doubleValue() * 3.6;
             if (angulo >= inicio && angulo < fin) {
-                return new ResultadoSeleccionRuleta(angulo, item);
+                return ResultadoSeleccionRuleta.builder().item(item).angulo(BigDecimal.valueOf(angulo)).numeroGiro(numeroGiro)
+                        .probabilidadFinal(item.getProbabilidad()).probabilidadAplicada(item.getProbabilidad()).build();
             }
             inicio = fin;
         }
-        return new ResultadoSeleccionRuleta(angulo, itemsOrdenados.get(itemsOrdenados.size() - 1));
+
+        RuletaItem ultimo = itemsOrdenados.get(itemsOrdenados.size() - 1);
+        return ResultadoSeleccionRuleta.builder().item(ultimo).angulo(BigDecimal.valueOf(angulo)).numeroGiro(numeroGiro)
+                .probabilidadFinal(ultimo.getProbabilidad()).probabilidadAplicada(ultimo.getProbabilidad()).build();
     }
 }

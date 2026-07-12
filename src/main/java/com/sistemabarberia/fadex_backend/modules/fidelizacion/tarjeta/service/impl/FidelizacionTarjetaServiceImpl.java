@@ -20,6 +20,7 @@ import com.sistemabarberia.fadex_backend.modules.fidelizacion.regla.entity.Fidel
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.regla.entity.enums.TipoAlcanceFidelizacion;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.regla.repository.FidelizacionReglaRepository;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.FidelizacionTarjetaFiltro;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.request.FidelizacionTarjetaPatchRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.request.FidelizacionTarjetaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.response.FidelizacionTarjetaResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.tarjeta.dto.response.TarjetasPorCategoriaResponseDTO;
@@ -52,7 +53,6 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
     private final ClienteRepository clienteRepository;
     private final CategoriaRepository categoriaRepository;
     private final FidelizacionTarjetaMapper tarjetaMapper;
-    private final IFidelizacionConfiguracionService configuracionService;
     private final IFidelizacionMovimientoService movimientoService;
     private final FidelizacionConfiguracionRepository configuracionRepository;
     private final UsuarioSecurityService usuarioSecurityService;
@@ -114,7 +114,7 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
             Categoria categoria = configuracion.getCategoria();
             if (categoria.getPadre() != null) {continue;}
             if (tarjetaRepository.existsByClienteClienteIdAndCategoriaId(cliente.getClienteId(), categoria.getId())) {continue;}
-            FidelizacionTarjeta tarjeta = FidelizacionTarjeta.builder().cliente(cliente).categoria(categoria).progreso(0).girosDisponibles(0).totalGiros(0).cicloActivo(true).build();
+            FidelizacionTarjeta tarjeta = FidelizacionTarjeta.builder().cliente(cliente).categoria(categoria).progreso(0).girosDisponibles(0).totalGiros(0).activo(true).cicloActivo(true).build();
             tarjetaRepository.save(tarjeta);
         }
     }
@@ -136,8 +136,9 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
         if (categoriaFidelizacion == null) {return;}
         Long categoriaId = categoriaFidelizacion.getId();
         FidelizacionTarjeta tarjeta = tarjetaRepository.findByClienteClienteIdAndCategoriaId(reserva.getCliente().getClienteId(), categoriaId).orElse(null);
-        System.out.println("Tarjeta encontrada: " + (tarjeta != null));
         if (tarjeta == null) {return;}
+        if (!Boolean.TRUE.equals(tarjeta.getActivo())) {return;}
+        System.out.println("Tarjeta encontrada: " + (tarjeta != null));
         FidelizacionRegla regla = reglaRepository.findByCategoriaIdAndServicioServicioIdAndActivoTrue(categoriaId, servicio.getServicioId()).orElseGet(() -> {
             FidelizacionRegla nueva = FidelizacionRegla.builder().categoria(categoriaFidelizacion).tipoAlcance(TipoAlcanceFidelizacion.SERVICIO)
                     .servicio(servicio).puntos(1).activo(true).build();
@@ -164,18 +165,17 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
                 if (categoriaFidelizacion == null) {continue;}
                 Long categoriaId = categoriaFidelizacion.getId();
                 FidelizacionTarjeta tarjeta = tarjetaRepository.findByClienteClienteIdAndCategoriaId(venta.getCliente().getClienteId(), categoriaId).orElse(null);
-                if (tarjeta != null) {
-                    FidelizacionRegla regla = reglaRepository.findByCategoriaIdAndProductoIdAndActivoTrue(categoriaId, producto.getId()).orElseGet(() -> {
-                        FidelizacionRegla nueva = FidelizacionRegla.builder().categoria(categoriaFidelizacion).tipoAlcance(TipoAlcanceFidelizacion.PRODUCTO)
-                                .producto(producto).puntos(1).activo(true).build();
-                        return reglaRepository.save(nueva);
-                    });
-                    int puntos = regla.getPuntos() * detalle.getCantidad();
-                    tarjeta.setProgreso(tarjeta.getProgreso() + puntos);
-                    tarjetaRepository.save(tarjeta);
-                    evaluarMeta(tarjeta);
-                    movimientoService.registrarMovimiento(tarjeta, OrigenFidelizacion.VENTA, venta.getVentaId().longValue(), puntos, "Producto: " + producto.getNombre());
-                }
+                if (tarjeta == null || !Boolean.TRUE.equals(tarjeta.getActivo())) {continue;}
+                FidelizacionRegla regla = reglaRepository.findByCategoriaIdAndProductoIdAndActivoTrue(categoriaId, producto.getId()).orElseGet(() -> {
+                    FidelizacionRegla nueva = FidelizacionRegla.builder().categoria(categoriaFidelizacion).tipoAlcance(TipoAlcanceFidelizacion.PRODUCTO).producto(producto).puntos(1).activo(true).build();
+                    return reglaRepository.save(nueva);
+                });
+                int puntos = regla.getPuntos() * detalle.getCantidad();
+                tarjeta.setProgreso(tarjeta.getProgreso() + puntos);
+                tarjetaRepository.save(tarjeta);
+                evaluarMeta(tarjeta);
+                movimientoService.registrarMovimiento(tarjeta, OrigenFidelizacion.VENTA, venta.getVentaId().longValue(), puntos, "Producto: " + producto.getNombre());
+
             }
             if (detalle.getServicio() != null) {
                 Servicio servicio = detalle.getServicio();
@@ -184,17 +184,15 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
                 Long categoriaId = categoriaFidelizacion.getId();
 
                 FidelizacionTarjeta tarjeta = tarjetaRepository.findByClienteClienteIdAndCategoriaId(venta.getCliente().getClienteId(), categoriaId).orElse(null);
-                if (tarjeta != null) {
-                    FidelizacionRegla regla = reglaRepository.findByCategoriaIdAndServicioServicioIdAndActivoTrue(categoriaId, servicio.getServicioId()).orElseGet(() -> {
-                        FidelizacionRegla nueva = FidelizacionRegla.builder().categoria(categoriaFidelizacion).tipoAlcance(TipoAlcanceFidelizacion.SERVICIO)
-                                .servicio(servicio).puntos(1).activo(true).build();return reglaRepository.save(nueva);
-                    });
-                    int puntos = regla.getPuntos() * detalle.getCantidad();
-                    tarjeta.setProgreso(tarjeta.getProgreso() + puntos);
-                    tarjetaRepository.save(tarjeta);
-                    evaluarMeta(tarjeta);
-                    movimientoService.registrarMovimiento(tarjeta, OrigenFidelizacion.VENTA, venta.getVentaId().longValue(), puntos, "Servicio: " + servicio.getNombre());
-                }
+                if (tarjeta == null || !Boolean.TRUE.equals(tarjeta.getActivo())) {continue;}
+                FidelizacionRegla regla = reglaRepository.findByCategoriaIdAndServicioServicioIdAndActivoTrue(categoriaId, servicio.getServicioId()).orElseGet(() -> {
+                    FidelizacionRegla nueva = FidelizacionRegla.builder().categoria(categoriaFidelizacion).tipoAlcance(TipoAlcanceFidelizacion.SERVICIO).servicio(servicio).puntos(1).activo(true).build();return reglaRepository.save(nueva);
+                });
+                int puntos = regla.getPuntos() * detalle.getCantidad();
+                tarjeta.setProgreso(tarjeta.getProgreso() + puntos);
+                tarjetaRepository.save(tarjeta);
+                evaluarMeta(tarjeta);
+                movimientoService.registrarMovimiento(tarjeta, OrigenFidelizacion.VENTA, venta.getVentaId().longValue(), puntos, "Servicio: " + servicio.getNombre());
             }
         }
     }
@@ -205,8 +203,8 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
         if (config == null) {return;}
         while (tarjeta.getProgreso() >= config.getMeta()) {
             tarjeta.setProgreso(tarjeta.getProgreso() - config.getMeta());
-            tarjeta.setGirosDisponibles(tarjeta.getGirosDisponibles() + 1);
-            tarjeta.setTotalGiros(tarjeta.getTotalGiros() + 1);
+            tarjeta.setGirosDisponibles(tarjeta.getGirosDisponibles() + config.getGirosPorMeta());
+            tarjeta.setTotalGiros(tarjeta.getTotalGiros() + config.getGirosPorMeta());
         }
         tarjetaRepository.save(tarjeta);
     }
@@ -214,6 +212,9 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
     @Override
     @Transactional
     public void consumirGiro(FidelizacionTarjeta tarjeta) {
+        if (!Boolean.TRUE.equals(tarjeta.getActivo())) {
+            throw new BusinessException("La tarjeta está inactiva.", HttpStatus.BAD_REQUEST);
+        }
         if (tarjeta.getGirosDisponibles() <= 0) {
             throw new BusinessException("La tarjeta no posee giros disponibles.", HttpStatus.BAD_REQUEST);
         }
@@ -233,7 +234,7 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
         List<Cliente> clientes = clienteRepository.findAll();
         for (Cliente cliente : clientes) {
             if (tarjetaRepository.existsByClienteClienteIdAndCategoriaId(cliente.getClienteId(), categoria.getId())) {continue;}
-            FidelizacionTarjeta tarjeta = FidelizacionTarjeta.builder().cliente(cliente).categoria(categoria).progreso(0).girosDisponibles(0).totalGiros(0).cicloActivo(true).build();
+            FidelizacionTarjeta tarjeta = FidelizacionTarjeta.builder().cliente(cliente).categoria(categoria).progreso(0).girosDisponibles(0).totalGiros(0).activo(true).cicloActivo(true).build();
             tarjetaRepository.save(tarjeta);
         }
     }
@@ -255,6 +256,9 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
         if (!tarjeta.getCliente().getClienteId().equals(cliente.getClienteId())) {
             throw new BusinessException("No tiene permiso para acceder a esta tarjeta.", HttpStatus.FORBIDDEN);
         }
+        if (!Boolean.TRUE.equals(tarjeta.getActivo())) {
+            throw new BusinessException("La tarjeta está inactiva.", HttpStatus.BAD_REQUEST);
+        }
         return tarjetaMapper.toResponse(tarjeta);
     }
 
@@ -264,7 +268,7 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
         Usuario usuario = usuarioSecurityService.getUsuarioLogueado();
         Cliente cliente = clienteRepository.findByUsuarioId(usuario.getIdUsuario()).orElseThrow(() -> new BusinessException("Cliente no encontrado para el usuario autenticado.", HttpStatus.NOT_FOUND));
         List<FidelizacionTarjeta> tarjetas = tarjetaRepository.findByClienteClienteId(cliente.getClienteId());
-        return tarjetas.stream().filter(t -> Boolean.TRUE.equals(t.getCicloActivo())).filter(t -> t.getGirosDisponibles() > 0)
+        return tarjetas.stream().filter(t -> Boolean.TRUE.equals(t.getActivo())).filter(t -> Boolean.TRUE.equals(t.getCicloActivo())).filter(t -> t.getGirosDisponibles() > 0)
                 .findFirst().orElseThrow(() -> new BusinessException("No posee ninguna tarjeta con giros disponibles.", HttpStatus.BAD_REQUEST));
     }
 
@@ -276,6 +280,9 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
         FidelizacionTarjeta tarjeta = tarjetaRepository.findById(tarjetaId).orElseThrow(() -> new BusinessException("Tarjeta no encontrada.", HttpStatus.NOT_FOUND));
         if (!tarjeta.getCliente().getClienteId().equals(cliente.getClienteId())) {
             throw new BusinessException("No tiene permiso para acceder a esta tarjeta.", HttpStatus.FORBIDDEN);
+        }
+        if (!Boolean.TRUE.equals(tarjeta.getActivo())) {
+            throw new BusinessException("La tarjeta está inactiva.", HttpStatus.BAD_REQUEST);
         }
         if (!Boolean.TRUE.equals(tarjeta.getCicloActivo())) {
             throw new BusinessException("La tarjeta no tiene un ciclo activo.", HttpStatus.BAD_REQUEST);
@@ -306,5 +313,17 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
         return tarjetaRepository.obtenerTarjetasPorCategoria().stream().map(r -> TarjetasPorCategoriaResponseDTO.builder()
                         .categoriaId((Long) r[0]).categoriaNombre((String) r[1]).totalTarjetas(((Long) r[2]).intValue()).tarjetasConGiroDisponible(((Long) r[3]).intValue())
                         .girosDisponibles(((Long) r[4]).intValue()).build()).toList();
+    }
+
+    @Override
+    @Transactional
+    public FidelizacionTarjetaResponseDTO actualizarParcial(Long id, FidelizacionTarjetaPatchRequestDTO dto) {
+        FidelizacionTarjeta tarjeta = tarjetaRepository.findById(id).orElseThrow(() -> new BusinessException("Tarjeta no encontrada", HttpStatus.NOT_FOUND));
+        switch (dto.getCampo()) {
+            case "activo" -> tarjeta.setActivo((Boolean) dto.getValor());
+            case "cicloActivo" -> tarjeta.setCicloActivo((Boolean) dto.getValor());
+            default -> throw new BusinessException("Campo no permitido para actualización.", HttpStatus.BAD_REQUEST);
+        }
+        return tarjetaMapper.toResponse(tarjetaRepository.save(tarjeta));
     }
 }

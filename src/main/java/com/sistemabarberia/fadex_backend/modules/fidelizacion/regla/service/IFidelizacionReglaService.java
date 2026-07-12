@@ -3,6 +3,7 @@ package com.sistemabarberia.fadex_backend.modules.fidelizacion.regla.service;
 import com.sistemabarberia.fadex_backend.commons.response.PageResponse;
 import com.sistemabarberia.fadex_backend.modules.categoria.entity.Categoria;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.regla.dto.FidelizacionReglaFiltro;
+import com.sistemabarberia.fadex_backend.modules.fidelizacion.regla.dto.request.FidelizacionReglaPatchRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.regla.dto.request.FidelizacionReglaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.fidelizacion.regla.dto.response.FidelizacionReglaResponseDTO;
 import org.springframework.data.domain.Pageable;
@@ -14,4 +15,5 @@ public interface IFidelizacionReglaService {
     FidelizacionReglaResponseDTO actualizarRegla(Long id,FidelizacionReglaRequestDTO dto);
     void eliminarRegla(Long id);
     void crearReglaPorDefecto(Categoria categoria);
+    FidelizacionReglaResponseDTO actualizarParcial(Long id, FidelizacionReglaPatchRequestDTO dto);
 }

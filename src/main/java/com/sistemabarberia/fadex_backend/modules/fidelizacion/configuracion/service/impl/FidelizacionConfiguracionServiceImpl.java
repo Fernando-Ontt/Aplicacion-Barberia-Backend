@@ -77,7 +77,7 @@ public class FidelizacionConfiguracionServiceImpl implements IFidelizacionConfig
             ruleta = ruletaRepository.findById(dto.getRuletaId()).orElseThrow(() -> new BusinessException("Ruleta no encontrada.", HttpStatus.NOT_FOUND));
         }
         FidelizacionConfiguracion configuracion = FidelizacionConfiguracion.builder().categoria(categoria).activa(dto.getActiva()).meta(dto.getMeta())
-                .mostrarSiempre(dto.getMostrarSiempre()).crearTarjetaAutomatica(dto.getCrearTarjetaAutomatica()).ruleta(ruleta).build();
+                .girosPorMeta(dto.getGirosPorMeta()).mostrarSiempre(dto.getMostrarSiempre()).crearTarjetaAutomatica(dto.getCrearTarjetaAutomatica()).ruleta(ruleta).build();
 
         configuracion = configuracionRepository.save(configuracion);
         reglaService.crearReglaPorDefecto(configuracion.getCategoria());
@@ -105,13 +105,19 @@ public class FidelizacionConfiguracionServiceImpl implements IFidelizacionConfig
         boolean antes = Boolean.TRUE.equals(configuracion.getCrearTarjetaAutomatica());
         configuracion.setActiva(dto.getActiva());
         configuracion.setMeta(dto.getMeta());
+        configuracion.setGirosPorMeta(dto.getGirosPorMeta());
         configuracion.setMostrarSiempre(dto.getMostrarSiempre());
         configuracion.setRuleta(ruleta);
         configuracion.setCrearTarjetaAutomatica(dto.getCrearTarjetaAutomatica());
+        System.out.println(configuracion.getGirosPorMeta());
         configuracion = configuracionRepository.save(configuracion);
+        System.out.println(configuracion.getGirosPorMeta());
         if (!antes && Boolean.TRUE.equals(configuracion.getCrearTarjetaAutomatica())) {
             tarjetaService.crearTarjetasParaCategoria(configuracion.getCategoria());
         }
+        System.out.println(dto.getMeta());
+        System.out.println(dto.getGirosPorMeta());
+        System.out.println(dto);
         return configuracionMapper.toResponse(configuracion);
     }
 
