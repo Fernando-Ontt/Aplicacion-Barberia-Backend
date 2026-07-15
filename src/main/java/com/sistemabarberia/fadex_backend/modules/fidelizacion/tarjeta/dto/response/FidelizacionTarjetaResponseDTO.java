@@ -12,6 +12,8 @@ public class FidelizacionTarjetaResponseDTO {
     private Long categoriaId;
     private String categoriaNombre;
     private Integer progreso;
+    private Integer meta;
+    private Integer girosPorMeta;
     private Integer girosDisponibles;
     private Integer totalGiros;
     private Boolean activo;

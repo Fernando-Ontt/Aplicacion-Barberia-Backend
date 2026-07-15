@@ -15,4 +15,5 @@ public interface FidelizacionConfiguracionRepository extends JpaRepository<Fidel
     boolean existsByCategoria_Id(Long categoriaId);
     Optional<FidelizacionConfiguracion> findByCategoriaIdAndActivaTrue(Integer categoriaId);
     List<FidelizacionConfiguracion> findByActivaTrueAndCrearTarjetaAutomaticaTrue();
+    List<FidelizacionConfiguracion> findByCategoriaIdIn(List<Long> categoriaIds);
 }

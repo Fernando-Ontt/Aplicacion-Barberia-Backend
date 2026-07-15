@@ -66,13 +66,13 @@ public class RecompensaObtenidaController {
     }
 
     @GetMapping("/mis-recompensas")
-    @PreAuthorize("hasAuthority('FIDELIZACION_READ')")
+    //@PreAuthorize("hasAuthority('FIDELIZACION_READ')")
     public ResponseEntity<ApiResponse<List<RecompensaObtenidaResponseDTO>>> obtenerMisRecompensas() {
         return ResponseEntity.ok(ApiResponse.ok("Recompensas obtenidas correctamente.", recompensaObtenidaService.obtenerMisRecompensas()));
     }
 
     @GetMapping("/mis-recompensas/{id}")
-    @PreAuthorize("hasAuthority('FIDELIZACION_READ')")
+    //@PreAuthorize("hasAuthority('FIDELIZACION_READ')")
     public ResponseEntity<ApiResponse<RecompensaObtenidaResponseDTO>> obtenerMiRecompensa(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok("Recompensa obtenida correctamente.", recompensaObtenidaService.obtenerMiRecompensa(id)));
     }

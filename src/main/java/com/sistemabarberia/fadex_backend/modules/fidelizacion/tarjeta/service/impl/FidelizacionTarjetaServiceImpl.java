@@ -62,14 +62,18 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
     @Transactional(readOnly = true)
     public PageResponse<FidelizacionTarjetaResponseDTO> listarTarjetas(FidelizacionTarjetaFiltro filtro, Pageable pageable) {
         Page<FidelizacionTarjeta> page = tarjetaRepository.findAll(FidelizacionTarjetaSpecification.conFiltros(filtro), pageable);
-        return PageResponse.of(page.map(tarjetaMapper::toResponse));
+        Page<FidelizacionTarjetaResponseDTO> dtoPage = page.map(tarjetaMapper::toResponse);
+        enriquecerConMeta(dtoPage.getContent());
+        return PageResponse.of(dtoPage);
     }
 
     @Override
     @Transactional(readOnly = true)
     public FidelizacionTarjetaResponseDTO obtenerTarjetaPorId(Long id) {
         FidelizacionTarjeta tarjeta = tarjetaRepository.findById(id).orElseThrow(() -> new BusinessException("Tarjeta no encontrada", HttpStatus.NOT_FOUND));
-        return tarjetaMapper.toResponse(tarjeta);
+        FidelizacionTarjetaResponseDTO dto = tarjetaMapper.toResponse(tarjeta);
+        enriquecerConMeta(dto);
+        return dto;
     }
 
     @Override
@@ -81,7 +85,9 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
         FidelizacionTarjeta tarjeta = tarjetaMapper.toEntity(dto);
         tarjeta.setCliente(obtenerCliente(dto.getClienteId().intValue()));
         tarjeta.setCategoria(obtenerCategoria(dto.getCategoriaId()));
-        return tarjetaMapper.toResponse(tarjetaRepository.save(tarjeta));
+        FidelizacionTarjetaResponseDTO response = tarjetaMapper.toResponse(tarjetaRepository.save(tarjeta));
+        enriquecerConMeta(response);
+        return response;
     }
 
     @Override
@@ -96,7 +102,9 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
         tarjetaMapper.updateFromRequest(dto, tarjeta);
         tarjeta.setCliente(obtenerCliente(dto.getClienteId().intValue()));
         tarjeta.setCategoria(obtenerCategoria(dto.getCategoriaId()));
-        return tarjetaMapper.toResponse(tarjetaRepository.save(tarjeta));
+        FidelizacionTarjetaResponseDTO response = tarjetaMapper.toResponse(tarjetaRepository.save(tarjeta));
+        enriquecerConMeta(response);
+        return response;
     }
 
     @Override
@@ -244,7 +252,9 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
     public List<FidelizacionTarjetaResponseDTO> obtenerMisTarjetas() {
         Usuario usuario = usuarioSecurityService.getUsuarioLogueado();
         Cliente cliente = clienteRepository.findByUsuarioId(usuario.getIdUsuario()).orElseThrow(() -> new BusinessException("Cliente no encontrado.", HttpStatus.NOT_FOUND));
-        return tarjetaRepository.findByClienteClienteId(cliente.getClienteId()).stream().map(tarjetaMapper::toResponse).toList();
+        List<FidelizacionTarjetaResponseDTO> dtos = tarjetaRepository.findByClienteClienteId(cliente.getClienteId()).stream().map(tarjetaMapper::toResponse).toList();
+        enriquecerConMeta(dtos);
+        return dtos;
     }
 
     @Override
@@ -259,7 +269,9 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
         if (!Boolean.TRUE.equals(tarjeta.getActivo())) {
             throw new BusinessException("La tarjeta está inactiva.", HttpStatus.BAD_REQUEST);
         }
-        return tarjetaMapper.toResponse(tarjeta);
+        FidelizacionTarjetaResponseDTO dto = tarjetaMapper.toResponse(tarjeta);
+        enriquecerConMeta(dto);
+        return dto;
     }
 
     @Override
@@ -325,12 +337,27 @@ public class FidelizacionTarjetaServiceImpl implements IFidelizacionTarjetaServi
             case "cicloActivo" -> tarjeta.setCicloActivo((Boolean) dto.getValor());
             default -> throw new BusinessException("Campo no permitido para actualización.", HttpStatus.BAD_REQUEST);
         }
-        System.out.println(dto.getCampo());
-        System.out.println(dto.getValor());
-        System.out.println(dto.getValor().getClass());
-        System.out.println("DESPUES: " + tarjeta.getActivo());
         tarjeta = tarjetaRepository.save(tarjeta);
-        System.out.println("GUARDADO: " + tarjeta.getActivo());
-        return tarjetaMapper.toResponse(tarjeta);
+        FidelizacionTarjetaResponseDTO response = tarjetaMapper.toResponse(tarjeta);
+        enriquecerConMeta(response);
+        return response;
+    }
+
+
+    private void enriquecerConMeta(List<FidelizacionTarjetaResponseDTO> dtos) {
+        if (dtos.isEmpty()) return;
+        List<Long> categoriaIds = dtos.stream().map(FidelizacionTarjetaResponseDTO::getCategoriaId).distinct().toList();
+        java.util.Map<Long, FidelizacionConfiguracion> configPorCategoria = configuracionRepository.findByCategoriaIdIn(categoriaIds).stream().collect(java.util.stream.Collectors.toMap(c -> c.getCategoria().getId(), c -> c));
+        for (FidelizacionTarjetaResponseDTO dto : dtos) {
+            FidelizacionConfiguracion config = configPorCategoria.get(dto.getCategoriaId());
+            if (config != null) {
+                dto.setMeta(config.getMeta());
+                dto.setGirosPorMeta(config.getGirosPorMeta());
+            }
+        }
+    }
+
+    private void enriquecerConMeta(FidelizacionTarjetaResponseDTO dto) {
+        enriquecerConMeta(List.of(dto));
     }
 }
