@@ -23,7 +23,7 @@ import java.util.Map;
 public class RecordatorioCronService {
 
     private final ReservaRepository reservaRepository;
-    private final String N8N_WEBHOOK_URL = "AQUÍ VA TU URL DE WEBHOOK DE N8N";
+    private final String N8N_WEBHOOK_URL = "https://ordershopx.app.n8n.cloud/webhook-test/recordatorio-reserva";
 
     @Scheduled(cron = "0 */5 * * * *")
     @Transactional
