@@ -52,11 +52,17 @@ public class PagoServiceImpl implements IPagoService {
 
         Cliente cliente = clienteRepository.findById(dto.getClienteId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
-        Barbero barbero = barberoRepository.findById(dto.getBarberoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado"));
+        Barbero barbero = null;
+        if (dto.getBarberoId() != null) {
+            barbero = barberoRepository.findById(dto.getBarberoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado"));
+        }
 
         Reserva reserva = null;
         if (dto.getReservaId() != null) {
+            if (barbero == null) {
+                throw new BusinessException("El barbero es obligatorio para pagar una reserva", HttpStatus.BAD_REQUEST);
+            }
             reserva = reservaRepository.findById(dto.getReservaId())
                     .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
             if (!reserva.getCliente().getClienteId().equals(cliente.getClienteId())) {
@@ -146,11 +152,17 @@ public class PagoServiceImpl implements IPagoService {
         Cliente cliente = clienteRepository.findById(dto.getClienteId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
 
-        Barbero barbero = barberoRepository.findById(dto.getBarberoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado"));
+        Barbero barbero = null;
+        if (dto.getBarberoId() != null) {
+            barbero = barberoRepository.findById(dto.getBarberoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado"));
+        }
 
         Reserva reserva = null;
         if (dto.getReservaId() != null) {
+            if (barbero == null) {
+                throw new BusinessException("El barbero es obligatorio para actualizar un pago de reserva", HttpStatus.BAD_REQUEST);
+            }
             reserva = reservaRepository.findById(dto.getReservaId())
                     .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
         }

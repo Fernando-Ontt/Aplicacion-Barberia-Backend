@@ -81,4 +81,10 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
     @Query("SELECT v.numeroCorrelativo FROM Venta v WHERE v.numeroCorrelativo LIKE :prefijo% ORDER BY v.numeroCorrelativo DESC LIMIT 1")
     String findUltimoCorrelativoPorMesAnio(@Param("prefijo") String prefijo);
     List<Venta> findByBarbero_BarberoIdOrderByFechaDesc(Integer barberoId);
+
+    @Query("select max(v.numeroComprobante) from Venta v where v.serieComprobante = :serie")
+    String findUltimoNumeroPorSerie(@Param("serie") String serie);
+
+    @Query(value = "select nextval(cast(concat('seq_comprobante_', lower(:serie)) as regclass))", nativeQuery = true)
+    long siguienteNumeroComprobante(@Param("serie") String serie);
 }

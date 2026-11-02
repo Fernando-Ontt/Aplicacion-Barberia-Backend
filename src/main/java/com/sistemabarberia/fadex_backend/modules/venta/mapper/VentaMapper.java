@@ -1,6 +1,7 @@
 package com.sistemabarberia.fadex_backend.modules.venta.mapper;
 
 import com.sistemabarberia.fadex_backend.modules.cliente.entity.Cliente;
+import com.sistemabarberia.fadex_backend.modules.barbero.entity.Barbero;
 import com.sistemabarberia.fadex_backend.modules.venta.dto.request.VentaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.venta.dto.response.VentaResponseDTO;
 import com.sistemabarberia.fadex_backend.modules.venta.dto.response.DetalleVentaResponseDTO;
@@ -24,6 +25,8 @@ public interface VentaMapper {
     @Mapping(source = "tipoComprobante", target = "tipoComprobante")
     @Mapping(target = "detalles", expression = "java(mapDetalles(venta.getDetalles()))")
     @Mapping(target = "clienteNombre", expression = "java(obtenerNombreCompleto(venta.getCliente()))")
+    @Mapping(target = "barberoId", expression = "java(obtenerBarberoId(venta.getBarbero()))")
+    @Mapping(target = "barberoNombre", expression = "java(obtenerNombreCompleto(venta.getBarbero()))")
     @Mapping(target = "metodoPago", ignore = true)
     VentaResponseDTO toResponse(Venta venta);
 
@@ -79,6 +82,19 @@ public interface VentaMapper {
         String nombre = cliente.getPersona().getNombre() != null ? cliente.getPersona().getNombre() : "";
         String apellido = cliente.getPersona().getApellido() != null ? cliente.getPersona().getApellido() : "";
 
+        return (nombre + " " + apellido).trim();
+    }
+
+    default Integer obtenerBarberoId(Barbero barbero) {
+        return barbero != null ? barbero.getBarberoId() : null;
+    }
+
+    default String obtenerNombreCompleto(Barbero barbero) {
+        if (barbero == null || barbero.getPersona() == null) {
+            return null;
+        }
+        String nombre = barbero.getPersona().getNombre() != null ? barbero.getPersona().getNombre() : "";
+        String apellido = barbero.getPersona().getApellido() != null ? barbero.getPersona().getApellido() : "";
         return (nombre + " " + apellido).trim();
     }
 }

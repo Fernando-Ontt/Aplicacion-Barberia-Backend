@@ -71,4 +71,5 @@ public class VentaController {
     public ResponseEntity<ApiResponse<List<HistorialVentaResponseDTO>>> listarHistorial(@PathVariable Integer id) {
         return ResponseEntity.ok(ApiResponse.ok("Historial obtenido correctamente", ventaService.listarHistorial(id)));
     }
+
 }

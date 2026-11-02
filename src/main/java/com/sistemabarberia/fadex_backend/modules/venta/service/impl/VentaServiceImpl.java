@@ -27,11 +27,11 @@ import com.sistemabarberia.fadex_backend.modules.reserva.entity.Reserva;
 import com.sistemabarberia.fadex_backend.modules.reserva.entity.EstadoReserva;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -42,6 +42,14 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class VentaServiceImpl implements IVentaService {
+
+    /**
+     * v1: sin IGV. Para activar el 18% basta con cambiar a new BigDecimal("0.18").
+     */
+    private static final BigDecimal TASA_IGV = BigDecimal.ZERO;
+
+    private static final String SERIE_BOLETA = "B001";
+    private static final String SERIE_FACTURA = "F001";
 
     private final VentaRepository ventaRepository;
     private final DetalleVentaRepository detalleVentaRepository;
@@ -68,17 +76,30 @@ public class VentaServiceImpl implements IVentaService {
         List<DetalleVenta> detalles = new ArrayList<>();
 
         if (dto.getBarberoId() != null) {
-            barbero = barberoRepository.findById(dto.getBarberoId()).orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado"));
+            barbero = barberoRepository.findById(dto.getBarberoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado"));
         }
 
         Venta venta = new Venta();
         venta.setBarbero(barbero);
         venta.setFecha(dto.getFecha() != null ? dto.getFecha() : LocalDateTime.now());
+        venta.setFechaEmision(venta.getFecha());
         venta.setTipoComprobante(dto.getTipoComprobante());
         venta.setNumeroCorrelativo(generarCorrelativo(venta.getFecha()));
 
+        // Serie y número del comprobante: NOT NULL, deben existir antes del primer save
+        String serie = venta.getTipoComprobante() == TipoComprobante.FACTURA ? SERIE_FACTURA : SERIE_BOLETA;
+        venta.setSerieComprobante(serie);
+        venta.setNumeroComprobante(generarNumeroComprobante(serie));
+
+        // Montos iniciales (se recalculan al final, después de las recompensas)
+        venta.setSubtotal(BigDecimal.ZERO.setScale(2));
+        venta.setIgv(BigDecimal.ZERO.setScale(2));
+        venta.setTotal(BigDecimal.ZERO.setScale(2));
+
         if (dto.getReservaId() != null) {
-            reservaVinculada = reservaRepository.findById(dto.getReservaId()).orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
+            reservaVinculada = reservaRepository.findById(dto.getReservaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
             cliente = reservaVinculada.getCliente();
 
             DetalleVenta detalleServicio = new DetalleVenta();
@@ -125,21 +146,20 @@ public class VentaServiceImpl implements IVentaService {
         Venta ventaGuardada = ventaRepository.save(venta);
         ventaGuardada = ventaRepository.findByIdWithDetalles(ventaGuardada.getVentaId());
 
-        // Recompensas (módulo migrado a tablas nuevas): se aplican antes de calcular el
-        // monto total por si el servicio ajusta precios/descuentos sobre los detalles.
+        // Recompensas: se aplican antes de calcular los montos por si ajustan precios/descuentos.
         if (dto.getRecompensasAplicadas() != null && !dto.getRecompensasAplicadas().isEmpty()) {
             recompensaObtenidaService.aplicarRecompensas(dto.getRecompensasAplicadas(), ventaGuardada);
         }
 
-        BigDecimal montoTotal = ventaGuardada.getDetalles().stream()
-                .map(detalle -> detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detalle.getCantidad())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Cálculo de montos SOLO en backend: subtotal = suma de detalles, igv = 0 (v1), total = subtotal + igv
+        calcularMontos(ventaGuardada);
+        ventaGuardada = ventaRepository.save(ventaGuardada);
 
         Pago pago = new Pago();
         pago.setCliente(cliente);
         pago.setBarbero(barbero);
         pago.setVenta(ventaGuardada);
-        pago.setMonto(montoTotal);
+        pago.setMonto(ventaGuardada.getTotal());
         pago.setMetodo(dto.getMetodoPago());
         pago.setFecha(LocalDateTime.now());
         pago.setTipo(TipoPago.VENTA);
@@ -148,12 +168,15 @@ public class VentaServiceImpl implements IVentaService {
             pago.setReserva(reservaVinculada);
         }
         pagoRepository.save(pago);
+
         HistorialVenta historial = new HistorialVenta();
         historial.setVenta(ventaGuardada);
         historial.setFecha(LocalDateTime.now());
         historialVentaRepository.save(historial);
+
         Long reservaIdParaFidelizacion = reservaVinculada != null ? reservaVinculada.getId() : null;
         fidelizacionEngine.procesarVenta(ventaGuardada, reservaIdParaFidelizacion);
+
         VentaResponseDTO response = ventaMapper.toResponse(ventaGuardada);
         response.setMetodoPago(dto.getMetodoPago());
         return response;
@@ -222,21 +245,29 @@ public class VentaServiceImpl implements IVentaService {
     @Override
     @Transactional(readOnly = true)
     public VentaResponseDTO obtenerPorId(Integer id) {
-        Venta venta = Optional.ofNullable(ventaRepository.findByIdWithDetalles(id)).orElseThrow(() -> new ResourceNotFoundException("Venta no encontrada"));
+        Venta venta = Optional.ofNullable(ventaRepository.findByIdWithDetalles(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Venta no encontrada"));
         VentaResponseDTO dto = ventaMapper.toResponse(venta);
-        pagoRepository.findFirstByVenta_VentaId(dto.getVentaId()).ifPresent(pago -> dto.setMetodoPago(pago.getMetodo()));
+        pagoRepository.findFirstByVenta_VentaId(dto.getVentaId())
+                .ifPresent(pago -> dto.setMetodoPago(pago.getMetodo()));
         return dto;
     }
 
     @Override
     @Transactional
     public VentaResponseDTO actualizar(Integer id, VentaRequestDTO dto) {
-        Venta venta = ventaRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Venta no encontrada"));
-        Cliente cliente = clienteRepository.findById(dto.getClienteId()).orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+        Venta venta = ventaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Venta no encontrada"));
+        Cliente cliente = clienteRepository.findById(dto.getClienteId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
 
         venta.setCliente(cliente);
-        venta.setFecha(dto.getFecha());
+        if (dto.getFecha() != null) {
+            venta.setFecha(dto.getFecha());
+        }
+        // La serie y el número del comprobante ya emitido NO se modifican.
         venta.setTipoComprobante(dto.getTipoComprobante());
+
         detalleVentaRepository.deleteAll(venta.getDetalles());
         venta.getDetalles().clear();
         for (DetalleVentaRequestDTO detDto : dto.getDetalles()) {
@@ -244,8 +275,13 @@ public class VentaServiceImpl implements IVentaService {
             detalle.setVenta(venta);
             venta.getDetalles().add(detalle);
         }
+
+        // Recalcular montos con los nuevos detalles
+        calcularMontos(venta);
+
         Venta ventaActualizada = ventaRepository.save(venta);
         ventaActualizada = ventaRepository.findByIdWithDetalles(ventaActualizada.getVentaId());
+
         HistorialVenta historial = new HistorialVenta();
         historial.setVenta(ventaActualizada);
         historial.setFecha(LocalDateTime.now());
@@ -253,8 +289,10 @@ public class VentaServiceImpl implements IVentaService {
 
         VentaResponseDTO response = ventaMapper.toResponse(ventaActualizada);
 
+        final BigDecimal nuevoTotal = ventaActualizada.getTotal();
         pagoRepository.findFirstByVenta_VentaId(ventaActualizada.getVentaId()).ifPresent(pago -> {
             pago.setMetodo(dto.getMetodoPago());
+            pago.setMonto(nuevoTotal);
             pagoRepository.save(pago);
             response.setMetodoPago(pago.getMetodo());
         });
@@ -281,6 +319,40 @@ public class VentaServiceImpl implements IVentaService {
         return historialVentaMapper.toResponseList(historialVentaRepository.findByVenta_VentaId(ventaId));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<VentaResponseDTO> listarPorBarbero(Integer barberoId) {
+        List<Venta> ventas = ventaRepository.findByBarbero_BarberoIdOrderByFechaDesc(barberoId);
+        List<VentaResponseDTO> dtoList = ventaMapper.toResponseList(ventas);
+        dtoList.forEach(dto -> {
+            pagoRepository.findFirstByVenta_VentaId(dto.getVentaId())
+                    .ifPresent(pago -> dto.setMetodoPago(pago.getMetodo()));
+        });
+        return dtoList;
+    }
+
+    // ------------------------------------------------------------------
+    // Helpers privados
+    // ------------------------------------------------------------------
+
+    /**
+     * subtotal = suma de detalles (precioUnitario * cantidad)
+     * igv      = subtotal * TASA_IGV (0 en la v1)
+     * total    = subtotal + igv
+     */
+    private void calcularMontos(Venta venta) {
+        BigDecimal subtotal = venta.getDetalles().stream()
+                .map(d -> d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        BigDecimal igv = subtotal.multiply(TASA_IGV).setScale(2, RoundingMode.HALF_UP);
+
+        venta.setSubtotal(subtotal);
+        venta.setIgv(igv);
+        venta.setTotal(subtotal.add(igv));
+    }
+
     private String generarCorrelativo(LocalDateTime fecha) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMyyyy");
         String mesAnio = fecha.format(formatter);
@@ -298,15 +370,9 @@ public class VentaServiceImpl implements IVentaService {
         return prefijo + String.format("%04d", siguienteNumero);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<VentaResponseDTO> listarPorBarbero(Integer barberoId) {
-        List<Venta> ventas = ventaRepository.findByBarbero_BarberoIdOrderByFechaDesc(barberoId);
-        List<VentaResponseDTO> dtoList = ventaMapper.toResponseList(ventas);
-        dtoList.forEach(dto -> {
-            pagoRepository.findFirstByVenta_VentaId(dto.getVentaId())
-                    .ifPresent(pago -> dto.setMetodoPago(pago.getMetodo()));
-        });
-        return dtoList;
+    private String generarNumeroComprobante(String serie) {
+        long siguiente = ventaRepository.siguienteNumeroComprobante(serie);
+        return String.format("%08d", siguiente);
     }
+
 }
