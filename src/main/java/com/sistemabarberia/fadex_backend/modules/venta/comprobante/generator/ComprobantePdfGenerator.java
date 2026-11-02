@@ -1,22 +1,25 @@
 package com.sistemabarberia.fadex_backend.modules.venta.comprobante.generator;
 
-import com.itextpdf.kernel.colors.ColorConstants;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.html2pdf.ConverterProperties;
+import com.itextpdf.html2pdf.HtmlConverter;
 import com.sistemabarberia.fadex_backend.modules.venta.entity.DetalleVenta;
 import com.sistemabarberia.fadex_backend.modules.venta.entity.Venta;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class ComprobantePdfGenerator {
@@ -24,99 +27,101 @@ public class ComprobantePdfGenerator {
     private static final DateTimeFormatter FECHA_FORMATO =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+    // SpringTemplateEngine usa SpEL (no OGNL), por eso ya no falla con ognl/PropertyAccessor
+    private final SpringTemplateEngine templateEngine;
+
+    public ComprobantePdfGenerator() {
+        ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
+        resolver.setPrefix("templates/");
+        resolver.setSuffix(".html");
+        resolver.setTemplateMode(TemplateMode.HTML);
+        resolver.setCharacterEncoding("UTF-8");
+        resolver.setCacheable(false);
+
+        templateEngine = new SpringTemplateEngine();
+        templateEngine.setTemplateResolver(resolver);
+    }
+
     public byte[] generar(Venta venta) {
-        try (ByteArrayOutputStream salida = new ByteArrayOutputStream()) {
-            PdfWriter writer = new PdfWriter(salida);
-            PdfDocument pdf = new PdfDocument(writer);
-            Document documento = new Document(pdf);
+        try {
+            Context contexto = new Context();
+            contexto.setVariable("local", datosLocal());
+            contexto.setVariable("venta", datosVenta(venta));
 
-            String tipo = venta.getTipoComprobante() != null
-                    ? venta.getTipoComprobante().name()
-                    : "COMPROBANTE";
-            String numero = String.format("%s-%s",
-                    venta.getSerieComprobante(), venta.getNumeroComprobante());
+            String html = templateEngine.process("ticket-comprobante", contexto);
+            ConverterProperties propiedades = new ConverterProperties();
+            propiedades.setCharset("UTF-8");
+            propiedades.setBaseUri(new ClassPathResource("templates/").getURL().toExternalForm());
 
-            documento.add(new Paragraph("FadeX - Barbería")
-                    .setBold()
-                    .setFontSize(18)
-                    .setTextAlignment(TextAlignment.CENTER));
-            documento.add(new Paragraph(tipo)
-                    .setBold()
-                    .setFontSize(14)
-                    .setTextAlignment(TextAlignment.CENTER));
-            documento.add(new Paragraph(numero)
-                    .setTextAlignment(TextAlignment.CENTER));
-
-            Table datos = new Table(UnitValue.createPercentArray(new float[]{1, 2}))
-                    .useAllAvailableWidth();
-            String fechaEmision = venta.getFechaEmision() != null
-                    ? venta.getFechaEmision().format(FECHA_FORMATO)
-                    : "-";
-            agregarDato(datos, "Fecha", fechaEmision);
-            agregarDato(datos, "Cliente", nombreCliente(venta));
-            agregarDato(datos, "Método de pago", "Registrado en la venta");
-            documento.add(datos);
-            documento.add(new Paragraph(" "));
-
-            Table detalle = new Table(UnitValue.createPercentArray(new float[]{4, 1, 2, 2}))
-                    .useAllAvailableWidth();
-            agregarEncabezado(detalle, "Descripción");
-            agregarEncabezado(detalle, "Cant.");
-            agregarEncabezado(detalle, "P. unit.");
-            agregarEncabezado(detalle, "Importe");
-
-            List<DetalleVenta> detalles = venta.getDetalles() != null
-                    ? venta.getDetalles()
-                    : List.of();
-            for (DetalleVenta item : detalles) {
-                String descripcion = item.getProducto() != null
-                        ? item.getProducto().getNombre()
-                        : item.getServicio() != null
-                        ? item.getServicio().getNombre()
-                        : "Detalle de venta";
-                BigDecimal precio = item.getPrecioUnitario() != null
-                        ? item.getPrecioUnitario()
-                        : BigDecimal.ZERO;
-                int cantidad = item.getCantidad() != null ? item.getCantidad() : 0;
-                BigDecimal importe = precio.multiply(BigDecimal.valueOf(cantidad));
-
-                detalle.addCell(descripcion);
-                detalle.addCell(String.valueOf(cantidad));
-                detalle.addCell(monto(precio));
-                detalle.addCell(monto(importe));
+            try (ByteArrayOutputStream salida = new ByteArrayOutputStream()) {
+                HtmlConverter.convertToPdf(html, salida, propiedades);
+                return salida.toByteArray();
             }
-            documento.add(detalle);
-
-            Table totales = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
-                    .setWidth(UnitValue.createPercentValue(45))
-                    .setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.RIGHT);
-            agregarDato(totales, "Subtotal", monto(venta.getSubtotal()));
-            agregarDato(totales, "IGV", monto(venta.getIgv()));
-            agregarDato(totales, "Total", monto(venta.getTotal()));
-            documento.add(totales);
-
-            documento.add(new Paragraph("Comprobante interno no válido para SUNAT.")
-                    .setFontSize(9)
-                    .setFontColor(ColorConstants.GRAY)
-                    .setTextAlignment(TextAlignment.CENTER)
-                    .setMarginTop(24));
-
-            documento.close();
-            return salida.toByteArray();
+        } catch (IOException exception) {
+            throw new IllegalStateException("No se pudo cargar la plantilla del comprobante", exception);
         } catch (Exception exception) {
             throw new IllegalStateException("No se pudo generar el comprobante PDF", exception);
         }
     }
 
-    private void agregarEncabezado(Table tabla, String texto) {
-        tabla.addHeaderCell(new Cell()
-                .add(new Paragraph(texto).setBold())
-                .setBackgroundColor(ColorConstants.LIGHT_GRAY));
+    private Map<String, String> datosLocal() {
+        Map<String, String> local = new HashMap<>();
+        local.put("ruc", "[TU RUC]");
+        local.put("direccion", "[Dirección del local]");
+        local.put("telefono", "[Teléfono]");
+        local.put("web", "[TU WEB O @REDES]");
+        return local;
     }
 
-    private void agregarDato(Table tabla, String etiqueta, String valor) {
-        tabla.addCell(new Cell().add(new Paragraph(etiqueta).setBold()));
-        tabla.addCell(new Cell().add(new Paragraph(valor != null ? valor : "-")));
+    private Map<String, Object> datosVenta(Venta venta) {
+        Map<String, Object> datos = new HashMap<>();
+        datos.put("tipoComprobante", venta.getTipoComprobante());
+        datos.put("serieComprobante", valor(venta.getSerieComprobante()));
+        datos.put("numeroComprobante", valor(venta.getNumeroComprobante()));
+        datos.put("fechaEmision", venta.getFechaEmision() != null
+                ? venta.getFechaEmision().format(FECHA_FORMATO)
+                : "-");
+        datos.put("clienteNombre", nombreCliente(venta));
+        datos.put("clienteDocumento", "No registrado");
+        datos.put("barberoNombre", nombreBarbero(venta));
+        datos.put("numeroCorrelativo", valor(venta.getNumeroCorrelativo()));
+        datos.put("metodoPago", "Registrado en la venta");
+        datos.put("subtotal", formatoMonto(venta.getSubtotal()));
+        datos.put("igv", formatoMonto(venta.getIgv()));
+        datos.put("total", formatoMonto(venta.getTotal()));
+        datos.put("totalEnLetras", "Importe total: S/ " + formatoMonto(venta.getTotal()));
+        datos.put("detalles", datosDetalles(venta));
+        return datos;
+    }
+
+    private List<Map<String, Object>> datosDetalles(Venta venta) {
+        List<Map<String, Object>> detalles = new ArrayList<>();
+        List<DetalleVenta> origen = venta.getDetalles() != null
+                ? venta.getDetalles()
+                : List.of();
+
+        for (DetalleVenta detalle : origen) {
+            BigDecimal precio = detalle.getPrecioUnitario() != null
+                    ? detalle.getPrecioUnitario()
+                    : BigDecimal.ZERO;
+            int cantidad = detalle.getCantidad() != null ? detalle.getCantidad() : 0;
+            Map<String, Object> item = new HashMap<>();
+            item.put("cantidad", cantidad);
+            item.put("descripcion", descripcion(detalle));
+            item.put("importe", formatoMonto(precio.multiply(BigDecimal.valueOf(cantidad))));
+            detalles.add(item);
+        }
+        return detalles;
+    }
+
+    private String descripcion(DetalleVenta detalle) {
+        if (detalle.getProducto() != null) {
+            return detalle.getProducto().getNombre();
+        }
+        if (detalle.getServicio() != null) {
+            return detalle.getServicio().getNombre();
+        }
+        return "Detalle de venta";
     }
 
     private String nombreCliente(Venta venta) {
@@ -125,11 +130,24 @@ public class ComprobantePdfGenerator {
         }
         var persona = venta.getCliente().getPersona();
         return String.format("%s %s",
-                persona.getNombre() != null ? persona.getNombre() : "",
-                persona.getApellido() != null ? persona.getApellido() : "").trim();
+                valor(persona.getNombre()), valor(persona.getApellido())).trim();
     }
 
-    private String monto(BigDecimal valor) {
-        return "S/ " + (valor != null ? valor : BigDecimal.ZERO);
+    private String nombreBarbero(Venta venta) {
+        if (venta.getBarbero() == null || venta.getBarbero().getPersona() == null) {
+            return "No registrado";
+        }
+        var persona = venta.getBarbero().getPersona();
+        return String.format("%s %s",
+                valor(persona.getNombre()), valor(persona.getApellido())).trim();
+    }
+
+    private String formatoMonto(BigDecimal monto) {
+        // HALF_UP evita ArithmeticException si el monto trae más de 2 decimales
+        return monto != null ? monto.setScale(2, RoundingMode.HALF_UP).toPlainString() : "0.00";
+    }
+
+    private String valor(String valor) {
+        return valor != null && !valor.isBlank() ? valor : "-";
     }
 }
