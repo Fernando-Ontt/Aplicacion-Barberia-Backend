@@ -43,10 +43,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class VentaServiceImpl implements IVentaService {
 
-    /**
-     * v1: sin IGV. Para activar el 18% basta con cambiar a new BigDecimal("0.18").
-     */
-    private static final BigDecimal TASA_IGV = BigDecimal.ZERO;
+    private static final BigDecimal TASA_IGV = new BigDecimal("0.18");
+    private static final BigDecimal FACTOR_IGV = BigDecimal.ONE.add(TASA_IGV);
 
     private static final String SERIE_BOLETA = "B001";
     private static final String SERIE_FACTURA = "F001";
@@ -151,7 +149,7 @@ public class VentaServiceImpl implements IVentaService {
             recompensaObtenidaService.aplicarRecompensas(dto.getRecompensasAplicadas(), ventaGuardada);
         }
 
-        // Cálculo de montos SOLO en backend: subtotal = suma de detalles, igv = 0 (v1), total = subtotal + igv
+        // Los precios de los detalles representan el total cobrado, con IGV incluido.
         calcularMontos(ventaGuardada);
         ventaGuardada = ventaRepository.save(ventaGuardada);
 
@@ -335,22 +333,18 @@ public class VentaServiceImpl implements IVentaService {
     // Helpers privados
     // ------------------------------------------------------------------
 
-    /**
-     * subtotal = suma de detalles (precioUnitario * cantidad)
-     * igv      = subtotal * TASA_IGV (0 en la v1)
-     * total    = subtotal + igv
-     */
     private void calcularMontos(Venta venta) {
-        BigDecimal subtotal = venta.getDetalles().stream()
+        BigDecimal total = venta.getDetalles().stream()
                 .map(d -> d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
 
-        BigDecimal igv = subtotal.multiply(TASA_IGV).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal subtotal = total.divide(FACTOR_IGV, 2, RoundingMode.HALF_UP);
+        BigDecimal igv = total.subtract(subtotal).setScale(2, RoundingMode.HALF_UP);
 
         venta.setSubtotal(subtotal);
         venta.setIgv(igv);
-        venta.setTotal(subtotal.add(igv));
+        venta.setTotal(total);
     }
 
     private String generarCorrelativo(LocalDateTime fecha) {
