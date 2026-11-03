@@ -9,6 +9,7 @@ import java.time.LocalTime;
 
 public record ReservaDTO(
         Long reservaId,
+        Integer clienteId,
         String clienteNombre,
         String barberoNombre,
         String servicio,

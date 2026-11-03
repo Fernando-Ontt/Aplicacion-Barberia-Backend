@@ -1,97 +1,365 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-<meta charset="UTF-8" />
-<title>Ticket comprobante 80 mm</title>
-<style>
-  @page { size: 80mm 230mm; margin: 0; }
-  * { margin: 0; padding: 0; }
-  body { width: 80mm; font-family: Helvetica, Arial, sans-serif; font-size: 8pt; color: #111111; background: #ffffff; }
-  table { width: 100%; border-collapse: collapse; }
-  td { vertical-align: top; }
-  .head { background: #0c0c0c; text-align: center; padding: 6mm 5mm 4mm 5mm; }
-  .logo { font-size: 24pt; font-weight: bold; letter-spacing: 3pt; color: #C9A84C; }
-  .sub { font-size: 8pt; letter-spacing: 5pt; color: #ffffff; padding-top: 1mm; }
-  .datos-local { font-size: 6.5pt; line-height: 1.5; color: #bdbdbd; padding-top: 3mm; }
-  .franja { height: 1.4mm; background: #C9A84C; font-size: 1pt; }
-  .cuerpo { padding: 4mm 5mm 0 5mm; }
-  .tipo { text-align: center; font-size: 11pt; font-weight: bold; letter-spacing: 1pt; }
-  .serie { text-align: center; font-size: 11pt; font-weight: bold; padding-top: 1mm; }
-  .sep { border-top: 1px dashed #8a8a8a; padding-top: 3mm; margin-top: 3mm; }
-  .lbl { color: #5a5a5a; font-size: 7pt; padding: 0.8mm 0; }
-  .val { text-align: right; font-weight: bold; font-size: 7.5pt; padding: 0.8mm 0; }
-  .th { color: #5a5a5a; font-size: 6.5pt; letter-spacing: 1pt; padding-bottom: 1.5mm; }
-  .item td { font-size: 8pt; padding: 1mm 0; }
-  .num { text-align: right; }
-  .tot-lbl { color: #5a5a5a; font-size: 8pt; padding: 0.8mm 0; }
-  .tot-val { text-align: right; font-size: 8pt; padding: 0.8mm 0; }
-  .total-box { background: #0c0c0c; border-left: 1.5mm solid #C9A84C; padding: 2.5mm 3.5mm; margin-top: 2mm; }
-  .total-box td { color: #ffffff; }
-  .total-t { font-size: 9pt; font-weight: bold; letter-spacing: 2pt; }
-  .total-v { text-align: right; font-size: 14pt; font-weight: bold; color: #C9A84C; }
-  .son { font-size: 6.5pt; color: #5a5a5a; line-height: 1.5; padding-top: 2mm; }
-  .pie { text-align: center; padding-top: 4mm; }
-  .qr { width: 20mm; height: 20mm; border: 1px dashed #8a8a8a; margin: 0 auto; text-align: center; font-size: 6.5pt; color: #5a5a5a; }
-  .gracias { font-size: 9pt; font-weight: bold; letter-spacing: 1pt; padding-top: 3mm; }
-  .ref { font-size: 6.5pt; color: #5a5a5a; padding-top: 1mm; }
-  .base { background: #0c0c0c; text-align: center; padding: 2.5mm 5mm; margin-top: 4mm; font-size: 6.5pt; letter-spacing: 2pt; color: #C9A84C; }
-</style>
+  <meta charset="UTF-8" />
+  <title>Ticket comprobante 80 mm</title>
+
+  <style>
+    @page { size: 80mm 230mm; margin: 0; }
+
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 80mm;
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 8pt;
+      color: #111111;
+      background: #ffffff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    td {
+      vertical-align: top;
+    }
+
+    .head {
+      background: #0c0c0c;
+      text-align: center;
+      padding: 6mm 5mm 4mm 5mm;
+    }
+
+    .logo {
+      font-size: 24pt;
+      font-weight: bold;
+      letter-spacing: 3pt;
+      color: #C9A84C;
+    }
+
+    .sub {
+      font-size: 8pt;
+      letter-spacing: 5pt;
+      color: #ffffff;
+      padding-top: 1mm;
+    }
+
+    .datos-local {
+      font-size: 6.5pt;
+      line-height: 1.5;
+      color: #bdbdbd;
+      padding-top: 3mm;
+    }
+
+    .franja {
+      height: 1.4mm;
+      background: #C9A84C;
+      font-size: 1pt;
+    }
+
+    .cuerpo {
+      padding: 4mm 5mm 0 5mm;
+    }
+
+    .tipo {
+      text-align: center;
+      font-size: 11pt;
+      font-weight: bold;
+      letter-spacing: 1pt;
+    }
+
+    .serie {
+      text-align: center;
+      font-size: 11pt;
+      font-weight: bold;
+      padding-top: 1mm;
+    }
+
+    .sep {
+      border-top: 1px dashed #8a8a8a;
+      padding-top: 3mm;
+      margin-top: 3mm;
+    }
+
+    .lbl {
+      color: #5a5a5a;
+      font-size: 7pt;
+      padding: 0.8mm 0;
+    }
+
+    .val {
+      text-align: right;
+      font-weight: bold;
+      font-size: 7.5pt;
+      padding: 0.8mm 0;
+    }
+
+    .th {
+      color: #5a5a5a;
+      font-size: 6.5pt;
+      letter-spacing: 1pt;
+      padding-bottom: 1.5mm;
+    }
+
+    .item td {
+      font-size: 8pt;
+      padding: 1mm 0;
+    }
+
+    .num {
+      text-align: right;
+    }
+
+    .tot-lbl {
+      color: #5a5a5a;
+      font-size: 8pt;
+      padding: 0.8mm 0;
+    }
+
+    .tot-val {
+      text-align: right;
+      font-size: 8pt;
+      padding: 0.8mm 0;
+    }
+
+    .total-box {
+      background: #0c0c0c;
+      border-left: 1.5mm solid #C9A84C;
+      padding: 2.5mm 3.5mm;
+      margin-top: 2mm;
+    }
+
+    .total-box td {
+      color: #ffffff;
+    }
+
+    .total-t {
+      font-size: 9pt;
+      font-weight: bold;
+      letter-spacing: 2pt;
+    }
+
+    .total-v {
+      text-align: right;
+      font-size: 14pt;
+      font-weight: bold;
+      color: #C9A84C;
+    }
+
+    .son {
+      font-size: 6.5pt;
+      color: #5a5a5a;
+      line-height: 1.5;
+      padding-top: 2mm;
+    }
+
+    /* Agradecimiento y frase FadeX */
+    .pie {
+      text-align: center;
+      padding: 4mm 1mm 2mm 1mm;
+    }
+
+    .gracias {
+      font-size: 9pt;
+      font-weight: bold;
+      letter-spacing: 0.8pt;
+      padding-top: 1mm;
+    }
+
+    .frase {
+      color: #C9A84C;
+      font-size: 9pt;
+      font-weight: bold;
+      font-style: italic;
+      line-height: 1.5;
+      padding: 2mm 2mm 1mm 2mm;
+    }
+
+    .marca {
+      font-size: 7.5pt;
+      font-weight: bold;
+      letter-spacing: 1pt;
+      color: #111111;
+      padding-top: 1mm;
+    }
+
+    .ref {
+      font-size: 6.5pt;
+      color: #5a5a5a;
+      padding-top: 2mm;
+    }
+
+    .base {
+      background: #0c0c0c;
+      text-align: center;
+      padding: 2.5mm 5mm;
+      margin-top: 3mm;
+      font-size: 6.5pt;
+      letter-spacing: 1pt;
+      color: #C9A84C;
+    }
+
+    .redes {
+      margin-top: 1mm;
+      line-height: 1.6;
+    }
+  </style>
 </head>
+
 <body>
-  <div class="head">
-    <div class="logo">FADEX</div>
-    <div class="sub">BARBERÍA</div>
-    <div class="datos-local">
-      R.U.C. <span th:text="${local.ruc}">[RUC]</span><br />
-      <span th:text="${local.direccion}">[Dirección del local]</span><br />
-      <span th:text="${local.telefono}">[Teléfono]</span>
-    </div>
+
+<!-- ENCABEZADO -->
+<div class="head">
+  <div class="logo">FADEX</div>
+  <div class="sub">BARBERÍA</div>
+
+  <div class="datos-local">
+    R.U.C. <span th:text="${local.ruc}">[RUC]</span><br />
+    <span th:text="${local.direccion}">[Dirección del local]</span><br />
+    <span th:text="${local.telefono}">[Teléfono]</span>
   </div>
-  <div class="franja">&#160;</div>
-  <div class="cuerpo">
-    <div class="tipo" th:text="${venta.tipoComprobante.name() == 'FACTURA' ? 'FACTURA DE VENTA' : 'BOLETA DE VENTA'}">BOLETA DE VENTA</div>
-    <div class="serie"><span th:text="${venta.serieComprobante}">____</span> - <span th:text="${venta.numeroComprobante}">________</span></div>
-    <div class="sep">
-      <table>
-        <tr><td class="lbl">Fecha</td><td class="val" th:text="${venta.fechaEmision}">__/__/____ __:__</td></tr>
-        <tr><td class="lbl">Cliente</td><td class="val" th:text="${venta.clienteNombre}">______________</td></tr>
-        <tr><td class="lbl">Documento</td><td class="val" th:text="${venta.clienteDocumento}">________</td></tr>
-        <tr><td class="lbl">Barbero</td><td class="val" th:text="${venta.barberoNombre}">______________</td></tr>
-      </table>
-    </div>
-    <div class="sep">
+</div>
+
+<div class="franja">&#160;</div>
+
+<div class="cuerpo">
+
+  <!-- TIPO Y NÚMERO DE COMPROBANTE -->
+  <div class="tipo"
+       th:text="${venta.tipoComprobante.name() == 'FACTURA' ? 'FACTURA DE VENTA' : 'BOLETA DE VENTA'}">
+    BOLETA DE VENTA
+  </div>
+
+  <div class="serie">
+    <span th:text="${venta.serieComprobante}">____</span> -
+    <span th:text="${venta.numeroComprobante}">________</span>
+  </div>
+
+  <!-- DATOS DEL CLIENTE -->
+  <div class="sep">
+    <table>
+      <tr>
+        <td class="lbl">Fecha</td>
+        <td class="val" th:text="${venta.fechaEmision}">__/__/____ __:__</td>
+      </tr>
+      <tr>
+        <td class="lbl">Cliente</td>
+        <td class="val" th:text="${venta.clienteNombre}">______________</td>
+      </tr>
+      <tr>
+        <td class="lbl">Documento</td>
+        <td class="val" th:text="${venta.clienteDocumento}">________</td>
+      </tr>
+      <tr>
+        <td class="lbl">Barbero</td>
+        <td class="val" th:text="${venta.barberoNombre}">______________</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- DETALLE DE LA VENTA -->
+  <div class="sep">
+    <table>
+      <tr>
+        <td class="th" style="width: 9mm;">CANT</td>
+        <td class="th">DESCRIPCIÓN</td>
+        <td class="th num" style="width: 17mm;">IMPORTE</td>
+      </tr>
+
+      <tr class="item" th:each="d : ${venta.detalles}">
+        <td th:text="${d.cantidad}">_</td>
+        <td th:text="${d.descripcion}">______________</td>
+        <td class="num" th:text="${d.importe}">____</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- TOTALES -->
+  <div class="sep">
+    <table>
+      <tr>
+        <td class="tot-lbl">Subtotal</td>
+        <td class="tot-val">S/ <span th:text="${venta.subtotal}">____</span></td>
+      </tr>
+      <tr>
+        <td class="tot-lbl">IGV</td>
+        <td class="tot-val">S/ <span th:text="${venta.igv}">____</span></td>
+      </tr>
+    </table>
+
+    <div class="total-box">
       <table>
         <tr>
-          <td class="th" style="width: 9mm;">CANT</td>
-          <td class="th">DESCRIPCIÓN</td>
-          <td class="th num" style="width: 17mm;">IMPORTE</td>
-        </tr>
-        <tr class="item" th:each="d : ${venta.detalles}">
-          <td th:text="${d.cantidad}">_</td>
-          <td th:text="${d.descripcion}">______________</td>
-          <td class="num" th:text="${d.importe}">____</td>
+          <td class="total-t">TOTAL</td>
+          <td class="total-v">
+            S/ <span th:text="${venta.total}">____</span>
+          </td>
         </tr>
       </table>
     </div>
-    <div class="sep">
-      <table>
-        <tr><td class="tot-lbl">Subtotal</td><td class="tot-val">S/ <span th:text="${venta.subtotal}">____</span></td></tr>
-        <tr><td class="tot-lbl">IGV</td><td class="tot-val">S/ <span th:text="${venta.igv}">____</span></td></tr>
-      </table>
-      <div class="total-box">
-        <table><tr><td class="total-t">TOTAL</td><td class="total-v">S/ <span th:text="${venta.total}">____</span></td></tr></table>
-      </div>
-      <table style="margin-top: 2mm;">
-        <tr><td class="tot-lbl">Método de pago</td><td class="tot-val" style="font-weight: bold;" th:text="${venta.metodoPago}">________</td></tr>
-      </table>
-      <div class="son">SON: <span th:text="${venta.totalEnLetras}">______________________________</span></div>
-    </div>
-    <div class="sep pie">
-      <div class="qr"><br /><br />QR</div>
-      <div class="gracias">GRACIAS POR TU PREFERENCIA</div>
-      <div class="ref">Ref. interna <span th:text="${venta.numeroCorrelativo}">VEN-______-____</span></div>
+
+    <!-- MÉTODO DE PAGO -->
+    <table style="margin-top: 2mm;">
+      <tr>
+        <td class="tot-lbl">Método de pago</td>
+        <td class="tot-val"
+            style="font-weight: bold;"
+            th:text="${venta.metodoPago != null ? venta.metodoPago : 'No registrado'}">
+          No registrado
+        </td>
+      </tr>
+    </table>
+
+    <div class="son">
+      SON:
+      <span th:text="${venta.totalEnLetras}">______________________________</span>
     </div>
   </div>
-  <div class="base"><span th:text="${local.web}">[TU WEB O @REDES]</span></div>
+
+  <!-- AGRADECIMIENTO Y FRASE MOTIVADORA -->
+  <div class="sep pie">
+
+    <div class="gracias">
+      ¡GRACIAS POR TU PREFERENCIA!
+    </div>
+
+    <div class="frase">
+      "Tu estilo habla por ti.<br />
+      ¡Haz que cada detalle<br />
+      marque la diferencia!"
+    </div>
+
+    <div class="marca">
+      CON FADEX BARBERÍA
+    </div>
+
+    <div class="ref">
+      Ref. interna
+      <span th:text="${venta.numeroCorrelativo}">VEN-______-____</span>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- REDES Y CONTACTO -->
+<div class="base">
+  <div th:text="${local.web}">www.fadexbarberia.com</div>
+
+  <div class="redes">
+    <span th:text="${local.instagram}">@fadex.barberia</span>
+    |
+    <span th:text="${local.facebook}">FadeX Barbería</span>
+    |
+    <span th:text="${local.tiktok}">@fadex.barberia</span>
+  </div>
+</div>
+
 </body>
 </html>
