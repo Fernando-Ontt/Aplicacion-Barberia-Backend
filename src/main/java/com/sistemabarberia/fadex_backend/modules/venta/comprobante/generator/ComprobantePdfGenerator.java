@@ -86,10 +86,17 @@ public class ComprobantePdfGenerator {
         datos.put("barberoNombre", nombreBarbero(venta));
         datos.put("numeroCorrelativo", valor(venta.getNumeroCorrelativo()));
         datos.put("metodoPago", "Registrado en la venta");
-        datos.put("subtotal", formatoMonto(venta.getSubtotal()));
-        datos.put("igv", formatoMonto(venta.getIgv()));
-        datos.put("total", formatoMonto(venta.getTotal()));
-        datos.put("totalEnLetras", "Importe total: S/ " + formatoMonto(venta.getTotal()));
+        BigDecimal total = monto(venta.getTotal());
+        BigDecimal subtotal = monto(venta.getSubtotal());
+        BigDecimal igv = monto(venta.getIgv());
+        if (total.signum() > 0 && igv.signum() == 0) {
+            subtotal = total.divide(new BigDecimal("1.18"), 2, RoundingMode.HALF_UP);
+            igv = total.subtract(subtotal).setScale(2, RoundingMode.HALF_UP);
+        }
+        datos.put("subtotal", formatoMonto(subtotal));
+        datos.put("igv", formatoMonto(igv));
+        datos.put("total", formatoMonto(total));
+        datos.put("totalEnLetras", "Importe total: S/ " + formatoMonto(total));
         datos.put("detalles", datosDetalles(venta));
         return datos;
     }
@@ -145,6 +152,10 @@ public class ComprobantePdfGenerator {
     private String formatoMonto(BigDecimal monto) {
         // HALF_UP evita ArithmeticException si el monto trae más de 2 decimales
         return monto != null ? monto.setScale(2, RoundingMode.HALF_UP).toPlainString() : "0.00";
+    }
+
+    private BigDecimal monto(BigDecimal monto) {
+        return monto != null ? monto : BigDecimal.ZERO;
     }
 
     private String valor(String valor) {

@@ -15,6 +15,7 @@ public interface ReservaMapper {
     Reserva toEntity(ReservaRequest request);
 
     @Mapping(target = "reservaId", source = "id")
+    @Mapping(target = "clienteId", expression = "java(reserva.getCliente() != null ? reserva.getCliente().getClienteId() : null)")
     @Mapping(target = "clienteNombre", expression = "java(nombreCompleto(reserva.getCliente() != null ? reserva.getCliente().getPersona() : null))")
     @Mapping(target = "barberoNombre", expression = "java(nombreCompleto(reserva.getBarbero() != null ? reserva.getBarbero().getPersona() : null))")
     @Mapping(target = "servicio", source = "reserva.servicio.nombre")
