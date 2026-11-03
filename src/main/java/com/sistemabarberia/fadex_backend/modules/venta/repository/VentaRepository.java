@@ -1,5 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.venta.repository;
 
+import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 import com.sistemabarberia.fadex_backend.modules.venta.entity.TipoComprobante;
 import com.sistemabarberia.fadex_backend.modules.venta.entity.Venta;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -87,4 +88,7 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
 
     @Query(value = "select nextval(cast(concat('seq_comprobante_', lower(:serie)) as regclass))", nativeQuery = true)
     long siguienteNumeroComprobante(@Param("serie") String serie);
+
+    @EntityGraph(attributePaths = {"detalles", "detalles.producto", "detalles.servicio"})
+    List<Venta> findByCliente_Persona_UsuarioOrderByFechaDesc(Usuario usuario);
 }

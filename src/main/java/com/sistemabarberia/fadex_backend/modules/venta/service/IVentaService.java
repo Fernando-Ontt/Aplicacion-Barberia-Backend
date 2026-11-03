@@ -1,5 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.venta.service;
 
+import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 import com.sistemabarberia.fadex_backend.modules.venta.dto.request.VentaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.venta.dto.response.*;
 
@@ -17,4 +18,5 @@ public interface IVentaService {
     List<DetalleVentaResponseDTO> listarDetalles(Integer ventaId);
     List<HistorialVentaResponseDTO> listarHistorial(Integer ventaId);
     List<VentaResponseDTO> listarPorBarbero(Integer barberoId);
+    List<VentaResponseDTO> listarMisCompras(Usuario usuario);
 }

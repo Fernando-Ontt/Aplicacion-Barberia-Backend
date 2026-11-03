@@ -1,5 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.venta.controller;
 
+import com.sistemabarberia.fadex_backend.auth.security.service.CustomUserDetails;
 import com.sistemabarberia.fadex_backend.commons.response.ApiResponse;
 import com.sistemabarberia.fadex_backend.modules.venta.dto.request.VentaRequestDTO;
 import com.sistemabarberia.fadex_backend.modules.venta.dto.response.DetalleVentaResponseDTO;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +41,12 @@ public class VentaController {
     @GetMapping("/barbero/{barberoId}")
     public ResponseEntity<ApiResponse<List<VentaResponseDTO>>> listarMisVentas(@PathVariable Integer barberoId) {
         return ResponseEntity.ok(ApiResponse.ok("Ventas del barbero listadas", ventaService.listarPorBarbero(barberoId)));
+    }
+    @GetMapping("/mis-compras")
+    public ResponseEntity<ApiResponse<List<VentaResponseDTO>>> listarMisCompras(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok("Compras del cliente listadas",
+                ventaService.listarMisCompras(userDetails.getUsuario())));
     }
 
     @GetMapping("/{id}")
