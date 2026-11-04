@@ -1,11 +1,25 @@
 package com.sistemabarberia.fadex_backend.modules.analisis.Service;
 
+import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.kernel.colors.DeviceRgb;
+import com.itextpdf.kernel.events.Event;
+import com.itextpdf.kernel.events.IEventHandler;
+import com.itextpdf.kernel.events.PdfDocumentEvent;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.*;
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
+import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
+import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.borders.DashedBorder;
+import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.sistemabarberia.fadex_backend.modules.analisis.dto.ResumenDiaDTO;
 import com.sistemabarberia.fadex_backend.modules.pagos.entity.MetodoPago;
@@ -22,14 +36,32 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ReporteServiceImpl implements ReporteService {
     private final ReservaRepository reservaRepository;
+
+    // ─── DATOS DEL LOCAL (se muestran en la cabecera de todos los PDF)
+    private static final String LOCAL_RUC       = "20612345678";
+    private static final String LOCAL_DIRECCION = "Estación Bayóvar, San Juan de Lurigancho, Lima";
+    private static final String LOCAL_TELEFONO  = "954 321 876";
+    private static final String LOCAL_WEB       = "@fadex.barberia";
 
     @Override
     public List<ResumenDiaDTO> getResumenSemanal(LocalDate desde, LocalDate hasta) {
@@ -51,58 +83,63 @@ public class ReporteServiceImpl implements ReporteService {
                 estado != null ? estado.name() : null,
                 metodoPago != null ? metodoPago.name() : null
         );
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        PdfWriter writer = new PdfWriter(out);
-        PdfDocument pdf = new PdfDocument(writer);
-        Document doc = new Document(pdf);
 
-        DeviceRgb negro     = new DeviceRgb(18, 18, 18);
-        DeviceRgb dorado    = new DeviceRgb(201, 168, 76);
-        DeviceRgb blanco    = new DeviceRgb(255, 255, 255);
-        DeviceRgb grisClaro = new DeviceRgb(245, 245, 245);
+        List<Reserva> finalizadas = reservas.stream().filter(ReporteServiceImpl::esFinalizada).toList();
+        BigDecimal ingresos = sumar(finalizadas);
+        long noConcretadas = reservas.stream().filter(ReporteServiceImpl::esNoConcretada).count();
 
-        Table header = new Table(UnitValue.createPercentArray(new float[]{1})).useAllAvailableWidth();
-        Cell headerCell = new Cell()
-                .add(new Paragraph("FadeX — Barbería").setBold().setFontSize(20).setFontColor(dorado))
-                .add(new Paragraph("Reporte: Reservas").setFontSize(12).setFontColor(dorado))
-                .add(new Paragraph("Período: " + desde + " al " + hasta).setFontSize(10).setFontColor(blanco))
-                .setBackgroundColor(negro)
-                .setBorder(Border.NO_BORDER)
-                .setPadding(20);
-        header.addCell(headerCell);
-        doc.add(header);
-        doc.add(new Paragraph("\n"));
+        List<Kpi> kpis = List.of(
+                new Kpi("Total reservas", String.valueOf(reservas.size()), "en el periodo"),
+                new Kpi("Finalizadas", String.valueOf(finalizadas.size()),
+                        porcentaje(finalizadas.size(), reservas.size()) + " del total"),
+                new Kpi("Canceladas / no asistió", String.valueOf(noConcretadas),
+                        porcentaje(noConcretadas, reservas.size()) + " del total"),
+                new Kpi("Ingresos", soles(ingresos),
+                        "ticket promedio " + soles(promedio(ingresos, finalizadas.size())))
+        );
 
-        Table table = new Table(UnitValue.createPercentArray(new float[]{1, 2, 2, 2, 2, 2}))
-                .useAllAvailableWidth();
+        List<String[]> porEstado = agrupar(reservas, r -> legible(estadoDe(r))).entrySet().stream()
+                .sorted((a, b) -> Integer.compare(b.getValue().size(), a.getValue().size()))
+                .map(e -> new String[]{e.getKey(), String.valueOf(e.getValue().size()), soles(sumar(e.getValue()))})
+                .toList();
 
-        String[] cols = {"ID", "Fecha", "Cliente", "Barbero", "Servicio", "Total"};
-        for (String col : cols) {
-            table.addHeaderCell(new Cell()
-                    .add(new Paragraph(col).setBold().setFontColor(negro))
-                    .setBackgroundColor(dorado)
-                    .setPadding(8));
-        }
+        List<String[]> porBarbero = agrupar(reservas, ReporteServiceImpl::nombreBarbero).entrySet().stream()
+                .sorted((a, b) -> Integer.compare(b.getValue().size(), a.getValue().size()))
+                .map(e -> {
+                    List<Reserva> fin = e.getValue().stream().filter(ReporteServiceImpl::esFinalizada).toList();
+                    return new String[]{e.getKey(), String.valueOf(e.getValue().size()),
+                            String.valueOf(fin.size()), soles(sumar(fin))};
+                })
+                .toList();
 
-        boolean par = false;
-        for (Reserva r : reservas) {
-            DeviceRgb fondo = par ? grisClaro : blanco;
-            table.addCell(new Cell().add(new Paragraph(String.valueOf(r.getId()))).setBackgroundColor(fondo).setPadding(6));
-            table.addCell(new Cell().add(new Paragraph(r.getFecha().toString())).setBackgroundColor(fondo).setPadding(6));
-            table.addCell(new Cell().add(new Paragraph(r.getCliente() != null ? r.getCliente().getPersona().getNombre() : "Sin cliente")).setBackgroundColor(fondo).setPadding(6));
-            table.addCell(new Cell().add(new Paragraph(r.getBarbero() != null ? r.getBarbero().getPersona().getNombre() : "Sin barbero")).setBackgroundColor(fondo).setPadding(6));
-            table.addCell(new Cell().add(new Paragraph(r.getServicio() != null ? r.getServicio().getNombre() : "Sin servicio")).setBackgroundColor(fondo).setPadding(6));
-            table.addCell(new Cell().add(new Paragraph("S/ " + r.getTotal())).setBackgroundColor(fondo).setPadding(6));
-            par = !par;
-        }
+        List<Bloque> resumenes = List.of(
+                new Bloque("Reservas por estado", new String[]{"Estado", "Cant.", "Monto"}, porEstado),
+                new Bloque("Reservas por barbero", new String[]{"Barbero", "Reservas", "Finalizadas", "Ingresos"}, porBarbero)
+        );
 
-        long total = reservas.size();
-        table.addCell(new Cell(1, 5).add(new Paragraph("TOTAL").setBold()).setBackgroundColor(dorado).setPadding(8));
-        table.addCell(new Cell().add(new Paragraph(total + " reservas").setBold()).setBackgroundColor(dorado).setPadding(8));
+        List<Columna> columnas = List.of(
+                new Columna("ID", 0.8f, false),
+                new Columna("Fecha", 1.4f, false),
+                new Columna("Cliente", 2.2f, false),
+                new Columna("Barbero", 2.0f, false),
+                new Columna("Servicio", 2.0f, false),
+                new Columna("Estado", 1.5f, false),
+                new Columna("Total", 1.4f, true)
+        );
 
-        doc.add(table);
-        doc.close();
-        return out.toByteArray();
+        List<String[]> filas = reservas.stream().map(r -> new String[]{
+                String.valueOf(r.getId()),
+                fecha(r.getFecha()),
+                nombreCliente(r),
+                nombreBarbero(r),
+                nombreServicio(r),
+                legible(estadoDe(r)),
+                soles(monto(r.getTotal()))
+        }).toList();
+
+        return construirPdf("Reservas", desde, hasta, kpis, resumenes, columnas, filas,
+                "Total ingresos", soles(ingresos),
+                "Se listan " + reservas.size() + " reservas. El total de ingresos corresponde solo a las reservas finalizadas.");
     }
 
     // ─── EXCEL RESERVAS
@@ -157,46 +194,64 @@ public class ReporteServiceImpl implements ReporteService {
     @Override
     public byte[] generarVentasPdf(LocalDate desde, LocalDate hasta) {
         List<Reserva> reservas = reservaRepository.findReservasPorPeriodo(desde, hasta);
-        BigDecimal total = reservaRepository.calcularIngresosPorPeriodo(desde, hasta);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Document doc = new Document(new PdfDocument(new PdfWriter(out)));
+        BigDecimal totalRepo = reservaRepository.calcularIngresosPorPeriodo(desde, hasta);
 
-        DeviceRgb negro     = new DeviceRgb(18, 18, 18);
-        DeviceRgb dorado    = new DeviceRgb(201, 168, 76);
-        DeviceRgb blanco    = new DeviceRgb(255, 255, 255);
-        DeviceRgb grisClaro = new DeviceRgb(245, 245, 245);
+        List<Reserva> ventas = reservas.stream()
+                .filter(r -> esFinalizada(r) && r.getServicio() != null)
+                .toList();
+        BigDecimal total = totalRepo != null ? totalRepo : sumar(ventas);
 
-        Table header = new Table(UnitValue.createPercentArray(new float[]{1})).useAllAvailableWidth();
-        header.addCell(new Cell()
-                .add(new Paragraph("FadeX — Barbería").setBold().setFontSize(20).setFontColor(dorado))
-                .add(new Paragraph("Reporte: Ventas e Ingresos").setFontSize(12).setFontColor(dorado))
-                .add(new Paragraph("Período: " + desde + " al " + hasta).setFontSize(10).setFontColor(blanco))
-                .add(new Paragraph("Total ingresos: S/ " + (total != null ? total : BigDecimal.ZERO)).setBold().setFontSize(11).setFontColor(dorado))
-                .setBackgroundColor(negro).setBorder(Border.NO_BORDER).setPadding(20));
-        doc.add(header);
-        doc.add(new Paragraph("\n"));
+        Map<String, List<Reserva>> porServicio = agrupar(ventas, ReporteServiceImpl::nombreServicio);
+        Map.Entry<String, List<Reserva>> top = porServicio.entrySet().stream()
+                .max((a, b) -> Integer.compare(a.getValue().size(), b.getValue().size()))
+                .orElse(null);
 
-        Table table = new Table(UnitValue.createPercentArray(new float[]{2, 2, 3, 2})).useAllAvailableWidth();
-        for (String col : new String[]{"Fecha", "Servicio", "Estado", "Total"}) {
-            table.addHeaderCell(new Cell().add(new Paragraph(col).setBold().setFontColor(negro))
-                    .setBackgroundColor(dorado).setPadding(8));
-        }
+        List<Kpi> kpis = List.of(
+                new Kpi("Total ingresos", soles(total), "periodo seleccionado"),
+                new Kpi("Servicios realizados", String.valueOf(ventas.size()), "reservas finalizadas"),
+                new Kpi("Ticket promedio", soles(promedio(total, ventas.size())), "por servicio"),
+                new Kpi("Servicio más vendido", top != null ? top.getKey() : "-",
+                        top != null ? top.getValue().size() + " veces" : "sin ventas")
+        );
 
-        boolean par = false;
-        for (Reserva r : reservas) {
-            if (r.getEstadoReserva() != null && "FINALIZADA".equals(r.getEstadoReserva().toString()) && r.getServicio() != null) {
-                DeviceRgb fondo = par ? grisClaro : blanco;
-                table.addCell(new Cell().add(new Paragraph(r.getFecha().toString())).setBackgroundColor(fondo).setPadding(6));
-                table.addCell(new Cell().add(new Paragraph(r.getServicio().getNombre())).setBackgroundColor(fondo).setPadding(6));
-                table.addCell(new Cell().add(new Paragraph(r.getEstadoReserva().toString())).setBackgroundColor(fondo).setPadding(6));
-                table.addCell(new Cell().add(new Paragraph("S/ " + r.getTotal())).setBackgroundColor(fondo).setPadding(6));
-                par = !par;
-            }
-        }
+        List<String[]> ingresosPorServicio = porServicio.entrySet().stream()
+                .sorted((a, b) -> sumar(b.getValue()).compareTo(sumar(a.getValue())))
+                .map(e -> {
+                    BigDecimal monto = sumar(e.getValue());
+                    return new String[]{e.getKey(), String.valueOf(e.getValue().size()),
+                            soles(monto), porcentajeMonto(monto, total)};
+                })
+                .toList();
 
-        doc.add(table);
-        doc.close();
-        return out.toByteArray();
+        Map<String, List<Reserva>> porDia = ventas.stream().collect(
+                Collectors.groupingBy(r -> String.valueOf(r.getFecha()), TreeMap::new, Collectors.toList()));
+        List<String[]> ingresosPorDia = porDia.values().stream()
+                .map(lista -> new String[]{fecha(lista.get(0).getFecha()),
+                        String.valueOf(lista.size()), soles(sumar(lista))})
+                .toList();
+
+        List<Bloque> resumenes = List.of(
+                new Bloque("Ingresos por servicio", new String[]{"Servicio", "Cant.", "Ingresos", "% del total"}, ingresosPorServicio),
+                new Bloque("Ingresos por día", new String[]{"Fecha", "Servicios", "Ingresos"}, ingresosPorDia)
+        );
+
+        List<Columna> columnas = List.of(
+                new Columna("Fecha", 1.6f, false),
+                new Columna("Servicio", 3.0f, false),
+                new Columna("Estado", 2.0f, false),
+                new Columna("Total", 1.6f, true)
+        );
+
+        List<String[]> filas = ventas.stream().map(r -> new String[]{
+                fecha(r.getFecha()),
+                nombreServicio(r),
+                legible(estadoDe(r)),
+                soles(monto(r.getTotal()))
+        }).toList();
+
+        return construirPdf("Ventas e Ingresos", desde, hasta, kpis, resumenes, columnas, filas,
+                "Total ingresos", soles(total),
+                "Solo se consideran las reservas finalizadas con servicio registrado.");
     }
 
     // ─── EXCEL VENTAS
@@ -244,45 +299,61 @@ public class ReporteServiceImpl implements ReporteService {
     // ─── PDF CLIENTES
     @Override
     public byte[] generarClientesPdf(LocalDate desde, LocalDate hasta) {
-        List<Reserva> reservas = reservaRepository.findReservasPorPeriodo(desde, hasta);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Document doc = new Document(new PdfDocument(new PdfWriter(out)));
+        List<Reserva> lista = reservaRepository.findReservasPorPeriodo(desde, hasta).stream()
+                .filter(r -> r.getCliente() != null && r.getCliente().getPersona() != null)
+                .toList();
 
-        DeviceRgb negro     = new DeviceRgb(18, 18, 18);
-        DeviceRgb dorado    = new DeviceRgb(201, 168, 76);
-        DeviceRgb blanco    = new DeviceRgb(255, 255, 255);
-        DeviceRgb grisClaro = new DeviceRgb(245, 245, 245);
+        Map<String, List<Reserva>> porCliente = agrupar(lista, ReporteServiceImpl::nombreCliente);
+        BigDecimal gasto = sumar(lista.stream().filter(ReporteServiceImpl::esFinalizada).toList());
+        Map.Entry<String, List<Reserva>> frecuente = porCliente.entrySet().stream()
+                .max((a, b) -> Integer.compare(a.getValue().size(), b.getValue().size()))
+                .orElse(null);
 
-        Table header = new Table(UnitValue.createPercentArray(new float[]{1})).useAllAvailableWidth();
-        header.addCell(new Cell()
-                .add(new Paragraph("FadeX — Barbería").setBold().setFontSize(20).setFontColor(dorado))
-                .add(new Paragraph("Reporte: Clientes").setFontSize(12).setFontColor(dorado))
-                .add(new Paragraph("Período: " + desde + " al " + hasta).setFontSize(10).setFontColor(blanco))
-                .setBackgroundColor(negro).setBorder(Border.NO_BORDER).setPadding(20));
-        doc.add(header);
-        doc.add(new Paragraph("\n"));
+        String visitasPorCliente = porCliente.isEmpty() ? "-"
+                : String.format(Locale.US, "%.1f por cliente", (double) lista.size() / porCliente.size());
 
-        Table table = new Table(UnitValue.createPercentArray(new float[]{2, 2, 2, 2})).useAllAvailableWidth();
-        for (String col : new String[]{"Cliente", "Fecha", "Servicio", "Total"}) {
-            table.addHeaderCell(new Cell().add(new Paragraph(col).setBold().setFontColor(negro))
-                    .setBackgroundColor(dorado).setPadding(8));
-        }
+        List<Kpi> kpis = List.of(
+                new Kpi("Clientes únicos", String.valueOf(porCliente.size()), "atendidos en el periodo"),
+                new Kpi("Visitas", String.valueOf(lista.size()), visitasPorCliente),
+                new Kpi("Gasto total", soles(gasto), "reservas finalizadas"),
+                new Kpi("Cliente más frecuente", frecuente != null ? frecuente.getKey() : "-",
+                        frecuente != null ? frecuente.getValue().size() + " visitas" : "sin visitas")
+        );
 
-        boolean par = false;
-        for (Reserva r : reservas) {
-            if (r.getCliente() != null && r.getCliente().getPersona() != null) {
-                DeviceRgb fondo = par ? grisClaro : blanco;
-                table.addCell(new Cell().add(new Paragraph(r.getCliente().getPersona().getNombre())).setBackgroundColor(fondo).setPadding(6));
-                table.addCell(new Cell().add(new Paragraph(r.getFecha().toString())).setBackgroundColor(fondo).setPadding(6));
-                table.addCell(new Cell().add(new Paragraph(r.getServicio() != null ? r.getServicio().getNombre() : "Sin servicio")).setBackgroundColor(fondo).setPadding(6));
-                table.addCell(new Cell().add(new Paragraph("S/ " + r.getTotal())).setBackgroundColor(fondo).setPadding(6));
-                par = !par;
-            }
-        }
+        List<String[]> topClientes = porCliente.entrySet().stream()
+                .sorted((a, b) -> {
+                    int porGasto = sumarFinalizadas(b.getValue()).compareTo(sumarFinalizadas(a.getValue()));
+                    return porGasto != 0 ? porGasto
+                            : Integer.compare(b.getValue().size(), a.getValue().size());
+                })
+                .limit(10)
+                .map(e -> new String[]{e.getKey(), String.valueOf(e.getValue().size()),
+                        soles(sumarFinalizadas(e.getValue()))})
+                .toList();
 
-        doc.add(table);
-        doc.close();
-        return out.toByteArray();
+        List<Bloque> resumenes = List.of(
+                new Bloque("Top 10 clientes por gasto", new String[]{"Cliente", "Visitas", "Gasto"}, topClientes)
+        );
+
+        List<Columna> columnas = List.of(
+                new Columna("Cliente", 2.4f, false),
+                new Columna("Fecha", 1.4f, false),
+                new Columna("Servicio", 2.2f, false),
+                new Columna("Estado", 1.5f, false),
+                new Columna("Total", 1.4f, true)
+        );
+
+        List<String[]> filas = lista.stream().map(r -> new String[]{
+                nombreCliente(r),
+                fecha(r.getFecha()),
+                nombreServicio(r),
+                legible(estadoDe(r)),
+                soles(monto(r.getTotal()))
+        }).toList();
+
+        return construirPdf("Clientes", desde, hasta, kpis, resumenes, columnas, filas,
+                "Gasto total", soles(gasto),
+                "El gasto total corresponde solo a las reservas finalizadas.");
     }
 
     // ─── EXCEL CLIENTES
@@ -331,45 +402,59 @@ public class ReporteServiceImpl implements ReporteService {
     // ─── PDF BARBEROS
     @Override
     public byte[] generarBarberosPdf(LocalDate desde, LocalDate hasta) {
-        List<Reserva> reservas = reservaRepository.findReservasPorPeriodo(desde, hasta);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Document doc = new Document(new PdfDocument(new PdfWriter(out)));
+        List<Reserva> lista = reservaRepository.findReservasPorPeriodo(desde, hasta).stream()
+                .filter(r -> r.getBarbero() != null && r.getBarbero().getPersona() != null)
+                .toList();
 
-        DeviceRgb negro     = new DeviceRgb(18, 18, 18);
-        DeviceRgb dorado    = new DeviceRgb(201, 168, 76);
-        DeviceRgb blanco    = new DeviceRgb(255, 255, 255);
-        DeviceRgb grisClaro = new DeviceRgb(245, 245, 245);
+        List<Reserva> finalizadas = lista.stream().filter(ReporteServiceImpl::esFinalizada).toList();
+        BigDecimal ingresos = sumar(finalizadas);
+        Map<String, List<Reserva>> porBarbero = agrupar(lista, ReporteServiceImpl::nombreBarbero);
 
-        Table header = new Table(UnitValue.createPercentArray(new float[]{1})).useAllAvailableWidth();
-        header.addCell(new Cell()
-                .add(new Paragraph("FadeX — Barbería").setBold().setFontSize(20).setFontColor(dorado))
-                .add(new Paragraph("Reporte: Actividad de Barberos").setFontSize(12).setFontColor(dorado))
-                .add(new Paragraph("Período: " + desde + " al " + hasta).setFontSize(10).setFontColor(blanco))
-                .setBackgroundColor(negro).setBorder(Border.NO_BORDER).setPadding(20));
-        doc.add(header);
-        doc.add(new Paragraph("\n"));
+        Map.Entry<String, List<Reserva>> top = porBarbero.entrySet().stream()
+                .max((a, b) -> sumarFinalizadas(a.getValue()).compareTo(sumarFinalizadas(b.getValue())))
+                .orElse(null);
 
-        Table table = new Table(UnitValue.createPercentArray(new float[]{2, 2, 2, 2})).useAllAvailableWidth();
-        for (String col : new String[]{"Barbero", "Fecha", "Servicio", "Total"}) {
-            table.addHeaderCell(new Cell().add(new Paragraph(col).setBold().setFontColor(negro))
-                    .setBackgroundColor(dorado).setPadding(8));
-        }
+        List<Kpi> kpis = List.of(
+                new Kpi("Atenciones", String.valueOf(finalizadas.size()), "de " + lista.size() + " reservas"),
+                new Kpi("Ingresos generados", soles(ingresos), "reservas finalizadas"),
+                new Kpi("Promedio por atención", soles(promedio(ingresos, finalizadas.size())), "ticket promedio"),
+                new Kpi("Barbero destacado", top != null ? top.getKey() : "-",
+                        top != null ? soles(sumarFinalizadas(top.getValue())) : "sin atenciones")
+        );
 
-        boolean par = false;
-        for (Reserva r : reservas) {
-            if (r.getBarbero() != null && r.getBarbero().getPersona() != null) {
-                DeviceRgb fondo = par ? grisClaro : blanco;
-                table.addCell(new Cell().add(new Paragraph(r.getBarbero().getPersona().getNombre())).setBackgroundColor(fondo).setPadding(6));
-                table.addCell(new Cell().add(new Paragraph(r.getFecha().toString())).setBackgroundColor(fondo).setPadding(6));
-                table.addCell(new Cell().add(new Paragraph(r.getServicio() != null ? r.getServicio().getNombre() : "Sin servicio")).setBackgroundColor(fondo).setPadding(6));
-                table.addCell(new Cell().add(new Paragraph("S/ " + r.getTotal())).setBackgroundColor(fondo).setPadding(6));
-                par = !par;
-            }
-        }
+        List<String[]> ranking = porBarbero.entrySet().stream()
+                .sorted((a, b) -> sumarFinalizadas(b.getValue()).compareTo(sumarFinalizadas(a.getValue())))
+                .map(e -> {
+                    List<Reserva> fin = e.getValue().stream().filter(ReporteServiceImpl::esFinalizada).toList();
+                    return new String[]{e.getKey(), String.valueOf(e.getValue().size()),
+                            String.valueOf(fin.size()), soles(sumar(fin)),
+                            porcentajeMonto(sumar(fin), ingresos)};
+                })
+                .toList();
 
-        doc.add(table);
-        doc.close();
-        return out.toByteArray();
+        List<Bloque> resumenes = List.of(
+                new Bloque("Ranking de barberos", new String[]{"Barbero", "Reservas", "Atenciones", "Ingresos", "% del total"}, ranking)
+        );
+
+        List<Columna> columnas = List.of(
+                new Columna("Barbero", 2.4f, false),
+                new Columna("Fecha", 1.4f, false),
+                new Columna("Servicio", 2.2f, false),
+                new Columna("Estado", 1.5f, false),
+                new Columna("Total", 1.4f, true)
+        );
+
+        List<String[]> filas = lista.stream().map(r -> new String[]{
+                nombreBarbero(r),
+                fecha(r.getFecha()),
+                nombreServicio(r),
+                legible(estadoDe(r)),
+                soles(monto(r.getTotal()))
+        }).toList();
+
+        return construirPdf("Actividad de Barberos", desde, hasta, kpis, resumenes, columnas, filas,
+                "Ingresos generados", soles(ingresos),
+                "Las atenciones y los ingresos corresponden solo a las reservas finalizadas.");
     }
 
     // ─── EXCEL BARBEROS
@@ -458,6 +543,409 @@ public class ReporteServiceImpl implements ReporteService {
         org.apache.poi.ss.usermodel.Cell cell = row.createCell(col);
         cell.setCellValue(value);
         cell.setCellStyle(style);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  DISEÑO FADEX PARA LOS PDF (negro + dorado, como el ticket)
+    // ══════════════════════════════════════════════════════════════════
+
+    private static final DeviceRgb NEGRO      = new DeviceRgb(12, 12, 12);
+    private static final DeviceRgb DORADO     = new DeviceRgb(201, 168, 76);
+    private static final DeviceRgb DORADO_OSC = new DeviceRgb(138, 109, 29);
+    private static final DeviceRgb BLANCO     = new DeviceRgb(255, 255, 255);
+    private static final DeviceRgb ZEBRA      = new DeviceRgb(246, 243, 233);
+    private static final DeviceRgb GRIS       = new DeviceRgb(90, 90, 90);
+    private static final DeviceRgb GRIS_CLARO = new DeviceRgb(189, 189, 189);
+    private static final DeviceRgb LINEA      = new DeviceRgb(201, 201, 201);
+    private static final DeviceRgb TEXTO      = new DeviceRgb(17, 17, 17);
+
+    private static final Locale ES = Locale.forLanguageTag("es-PE");
+    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter FORMATO_FECHA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    /** Tarjeta de resumen: etiqueta, valor grande y detalle. */
+    private record Kpi(String etiqueta, String valor, String detalle) {}
+
+    /** Columna de la tabla de detalle: título, ancho relativo y alineación. */
+    private record Columna(String titulo, float peso, boolean derecha) {}
+
+    /** Tabla de apoyo (por estado, por barbero, ranking...). La primera columna va a la izquierda. */
+    private record Bloque(String titulo, String[] columnas, List<String[]> filas) {}
+
+    /** Arma el PDF completo con el diseño de FadeX. */
+    private byte[] construirPdf(String titulo, LocalDate desde, LocalDate hasta,
+                                List<Kpi> kpis, List<Bloque> resumenes,
+                                List<Columna> columnas, List<String[]> filas,
+                                String totalEtiqueta, String totalValor, String nota) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            PdfFont fuente = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+            PdfDocument pdf = new PdfDocument(new PdfWriter(out));
+            PieDePagina pie = new PieDePagina(fuente);
+            pdf.addEventHandler(PdfDocumentEvent.END_PAGE, pie);
+
+            Document doc = new Document(pdf, PageSize.A4);
+            doc.setMargins(28, 28, 48, 28);
+            doc.setFont(fuente);
+            doc.setFontSize(9);
+
+            doc.add(cabeceraMarca());
+            doc.add(franjaDorada());
+            doc.add(bloqueTitulo(titulo, desde, hasta));
+
+            if (kpis != null && !kpis.isEmpty()) {
+                doc.add(seccion("Resumen del periodo"));
+                doc.add(tarjetas(kpis));
+            }
+            if (resumenes != null) {
+                for (Bloque b : resumenes) {
+                    if (!b.filas().isEmpty()) {
+                        doc.add(seccion(b.titulo()));
+                        doc.add(tablaResumen(b));
+                    }
+                }
+            }
+
+            doc.add(seccion("Detalle"));
+            doc.add(tablaDetalle(columnas, filas));
+            if (filas.isEmpty()) {
+                doc.add(new Paragraph("No hay registros en este periodo.")
+                        .setTextAlignment(TextAlignment.CENTER)
+                        .setFontSize(9).setFontColor(GRIS).setMarginTop(14).setMarginBottom(14));
+            }
+
+            if (totalValor != null) {
+                doc.add(cajaTotal(totalEtiqueta, totalValor));
+            }
+            if (nota != null && !nota.isBlank()) {
+                doc.add(new Paragraph(nota).setFontSize(7).setFontColor(GRIS).setMarginTop(8).setMarginBottom(0));
+            }
+            doc.add(barraBase());
+
+            pie.escribirTotal(pdf);
+            doc.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Error generando PDF de " + titulo, e);
+        }
+        return out.toByteArray();
+    }
+
+    // ─── Cabecera: FADEX / BARBERÍA + datos del local, sobre fondo negro
+    private Table cabeceraMarca() {
+        Table t = new Table(UnitValue.createPercentArray(new float[]{3, 2})).useAllAvailableWidth();
+        t.addCell(new Cell().setBorder(Border.NO_BORDER).setBackgroundColor(NEGRO)
+                .setPaddingTop(18).setPaddingBottom(14).setPaddingLeft(20)
+                .add(new Paragraph("FADEX").setBold().setFontSize(28).setCharacterSpacing(4)
+                        .setFontColor(DORADO).setMargin(0))
+                .add(new Paragraph("BARBERÍA").setFontSize(8).setCharacterSpacing(6)
+                        .setFontColor(BLANCO).setMarginTop(2).setMarginBottom(0)));
+        t.addCell(new Cell().setBorder(Border.NO_BORDER).setBackgroundColor(NEGRO)
+                .setPaddingTop(22).setPaddingBottom(14).setPaddingRight(20)
+                .setTextAlignment(TextAlignment.RIGHT)
+                .add(lineaLocal("R.U.C. " + LOCAL_RUC))
+                .add(lineaLocal(LOCAL_DIRECCION))
+                .add(lineaLocal(LOCAL_TELEFONO)));
+        return t;
+    }
+
+    private Paragraph lineaLocal(String texto) {
+        return new Paragraph(texto).setFontSize(7).setFontColor(GRIS_CLARO).setMargin(0).setMultipliedLeading(1.4f);
+    }
+
+    private Table franjaDorada() {
+        Table t = new Table(UnitValue.createPercentArray(new float[]{1})).useAllAvailableWidth();
+        t.addCell(new Cell().setHeight(6).setPadding(0).setBorder(Border.NO_BORDER).setBackgroundColor(DORADO));
+        return t;
+    }
+
+    // ─── Título del reporte + periodo y fecha de generación
+    private Table bloqueTitulo(String titulo, LocalDate desde, LocalDate hasta) {
+        Table t = new Table(UnitValue.createPercentArray(new float[]{3, 2})).useAllAvailableWidth().setMarginTop(16);
+        t.addCell(new Cell().setBorder(Border.NO_BORDER).setPadding(0)
+                .add(new Paragraph("REPORTE").setBold().setFontSize(7.5f).setCharacterSpacing(3)
+                        .setFontColor(DORADO_OSC).setMargin(0))
+                .add(new Paragraph(titulo).setBold().setFontSize(17).setCharacterSpacing(0.8f)
+                        .setFontColor(NEGRO).setMarginTop(1).setMarginBottom(0)));
+        t.addCell(new Cell().setBorder(Border.NO_BORDER).setPadding(0).setTextAlignment(TextAlignment.RIGHT)
+                .add(datoMeta("Periodo: ", fecha(desde) + " al " + fecha(hasta)))
+                .add(datoMeta("Generado: ", LocalDateTime.now().format(FORMATO_FECHA_HORA))));
+        return t;
+    }
+
+    private Paragraph datoMeta(String etiqueta, String valor) {
+        return new Paragraph()
+                .add(new Text(etiqueta).setBold().setFontColor(TEXTO))
+                .add(new Text(valor).setFontColor(GRIS))
+                .setFontSize(8).setMargin(0).setMultipliedLeading(1.5f);
+    }
+
+    // ─── Título de sección con línea dorada
+    private Paragraph seccion(String texto) {
+        return new Paragraph(texto.toUpperCase(ES)).setBold().setFontSize(8).setCharacterSpacing(2)
+                .setFontColor(NEGRO).setMarginTop(16).setMarginBottom(6).setPaddingBottom(2)
+                .setBorderBottom(new SolidBorder(DORADO, 1.2f));
+    }
+
+    // ─── Tarjetas de resumen (negro, borde dorado a la izquierda)
+    private Table tarjetas(List<Kpi> kpis) {
+        int n = kpis.size();
+        float[] anchos = new float[n * 2 - 1];
+        for (int i = 0; i < anchos.length; i++) {
+            anchos[i] = (i % 2 == 0) ? 1f : 0.06f;
+        }
+        Table t = new Table(UnitValue.createPercentArray(anchos)).useAllAvailableWidth();
+        for (int i = 0; i < n; i++) {
+            Kpi k = kpis.get(i);
+            float tamano = k.valor().length() > 13 ? 10f : 13f;
+            t.addCell(new Cell().setBackgroundColor(NEGRO)
+                    .setBorder(Border.NO_BORDER).setBorderLeft(new SolidBorder(DORADO, 4))
+                    .setPaddingTop(8).setPaddingBottom(8).setPaddingLeft(9).setPaddingRight(6)
+                    .add(new Paragraph(k.etiqueta().toUpperCase(ES)).setFontSize(6).setCharacterSpacing(1)
+                            .setFontColor(GRIS_CLARO).setMargin(0))
+                    .add(new Paragraph(k.valor()).setBold().setFontSize(tamano)
+                            .setFontColor(DORADO).setMarginTop(3).setMarginBottom(0))
+                    .add(new Paragraph(k.detalle()).setFontSize(6.5f)
+                            .setFontColor(BLANCO).setMarginTop(1).setMarginBottom(0)));
+            if (i < n - 1) {
+                t.addCell(new Cell().setBorder(Border.NO_BORDER).setPadding(0));
+            }
+        }
+        return t;
+    }
+
+    // ─── Tabla de apoyo (por estado, ranking, etc.)
+    private Table tablaResumen(Bloque b) {
+        float[] anchos = new float[b.columnas().length];
+        for (int i = 0; i < anchos.length; i++) {
+            anchos[i] = (i == 0) ? 3f : 1.4f;
+        }
+        Table t = new Table(UnitValue.createPercentArray(anchos)).useAllAvailableWidth();
+        for (int i = 0; i < b.columnas().length; i++) {
+            t.addHeaderCell(celdaEncabezado(b.columnas()[i], i > 0));
+        }
+        boolean zebra = false;
+        for (String[] fila : b.filas()) {
+            for (int i = 0; i < fila.length; i++) {
+                t.addCell(celdaFila(fila[i], i > 0, zebra, i > 0));
+            }
+            zebra = !zebra;
+        }
+        return t;
+    }
+
+    // ─── Tabla de detalle
+    private Table tablaDetalle(List<Columna> columnas, List<String[]> filas) {
+        float[] anchos = new float[columnas.size()];
+        for (int i = 0; i < anchos.length; i++) {
+            anchos[i] = columnas.get(i).peso();
+        }
+        Table t = new Table(UnitValue.createPercentArray(anchos)).useAllAvailableWidth();
+        for (Columna c : columnas) {
+            t.addHeaderCell(celdaEncabezado(c.titulo(), c.derecha()));
+        }
+        boolean zebra = false;
+        for (String[] fila : filas) {
+            for (int i = 0; i < fila.length; i++) {
+                boolean derecha = columnas.get(i).derecha();
+                t.addCell(celdaFila(fila[i], derecha, zebra, derecha));
+            }
+            zebra = !zebra;
+        }
+        return t;
+    }
+
+    private Cell celdaEncabezado(String texto, boolean derecha) {
+        Cell c = new Cell().setBackgroundColor(NEGRO).setBorder(Border.NO_BORDER).setPadding(6)
+                .add(new Paragraph(texto.toUpperCase(ES)).setBold().setFontSize(7).setCharacterSpacing(0.8f)
+                        .setFontColor(DORADO).setMargin(0));
+        if (derecha) {
+            c.setTextAlignment(TextAlignment.RIGHT);
+        }
+        return c;
+    }
+
+    private Cell celdaFila(String texto, boolean derecha, boolean zebra, boolean negrita) {
+        Paragraph p = new Paragraph(texto == null ? "" : texto).setFontSize(8).setFontColor(TEXTO).setMargin(0);
+        if (negrita) {
+            p.setBold();
+        }
+        Cell c = new Cell().setBorder(Border.NO_BORDER).setBorderBottom(new DashedBorder(LINEA, 0.6f))
+                .setPaddingTop(5).setPaddingBottom(5).setPaddingLeft(6).setPaddingRight(6)
+                .setKeepTogether(true).add(p);
+        if (zebra) {
+            c.setBackgroundColor(ZEBRA);
+        }
+        if (derecha) {
+            c.setTextAlignment(TextAlignment.RIGHT);
+        }
+        return c;
+    }
+
+    // ─── Caja de total (igual que el ticket)
+    private Table cajaTotal(String etiqueta, String valor) {
+        Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth().setMarginTop(14);
+        t.addCell(new Cell().setBackgroundColor(NEGRO)
+                .setBorder(Border.NO_BORDER).setBorderLeft(new SolidBorder(DORADO, 6))
+                .setPaddingTop(11).setPaddingBottom(11).setPaddingLeft(14)
+                .add(new Paragraph(etiqueta.toUpperCase(ES)).setBold().setFontSize(10).setCharacterSpacing(2.5f)
+                        .setFontColor(BLANCO).setMargin(0)));
+        t.addCell(new Cell().setBackgroundColor(NEGRO).setBorder(Border.NO_BORDER)
+                .setPaddingTop(8).setPaddingBottom(8).setPaddingRight(14)
+                .setTextAlignment(TextAlignment.RIGHT)
+                .add(new Paragraph(valor).setBold().setFontSize(17).setFontColor(DORADO).setMargin(0)));
+        return t;
+    }
+
+    private Table barraBase() {
+        Table t = new Table(UnitValue.createPercentArray(new float[]{1})).useAllAvailableWidth().setMarginTop(22);
+        t.addCell(new Cell().setBackgroundColor(NEGRO).setBorder(Border.NO_BORDER).setPadding(7)
+                .setTextAlignment(TextAlignment.CENTER)
+                .add(new Paragraph(LOCAL_WEB.toUpperCase(ES)).setFontSize(7).setCharacterSpacing(2.5f)
+                        .setFontColor(DORADO).setMargin(0)));
+        return t;
+    }
+
+    /** Pie de cada página: línea dorada, "FADEX BARBERÍA" y "Página N de M". */
+    private static class PieDePagina implements IEventHandler {
+        private final PdfFormXObject totalPaginas = new PdfFormXObject(new Rectangle(0, 0, 20, 12));
+        private final PdfFont fuente;
+
+        PieDePagina(PdfFont fuente) {
+            this.fuente = fuente;
+        }
+
+        @Override
+        public void handleEvent(Event event) {
+            PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
+            PdfDocument pdf = docEvent.getDocument();
+            PdfPage page = docEvent.getPage();
+            int numero = pdf.getPageNumber(page);
+            Rectangle tam = page.getPageSize();
+            float izq = 28;
+            float der = tam.getWidth() - 28;
+            float y = 22;
+
+            PdfCanvas pdfCanvas = new PdfCanvas(page.newContentStreamAfter(), page.getResources(), pdf);
+            pdfCanvas.setStrokeColor(DORADO).setLineWidth(0.6f).moveTo(izq, y + 12).lineTo(der, y + 12).stroke();
+
+            Canvas canvas = new Canvas(pdfCanvas, tam);
+            canvas.showTextAligned(texto("FADEX BARBERÍA"), izq, y, TextAlignment.LEFT);
+            canvas.showTextAligned(texto("Página " + numero + " de"), der - 12, y, TextAlignment.RIGHT);
+            canvas.close();
+            pdfCanvas.addXObjectAt(totalPaginas, der - 10, y - 2);
+        }
+
+        /** Se llama una sola vez, antes de cerrar, cuando ya se sabe cuántas páginas hay. */
+        void escribirTotal(PdfDocument pdf) {
+            Canvas canvas = new Canvas(totalPaginas, pdf);
+            canvas.showTextAligned(texto(String.valueOf(pdf.getNumberOfPages())), 0, 2, TextAlignment.LEFT);
+            canvas.close();
+        }
+
+        private Paragraph texto(String s) {
+            return new Paragraph(s).setFont(fuente).setFontSize(7).setFontColor(GRIS);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  UTILIDADES DE DATOS
+    // ══════════════════════════════════════════════════════════════════
+
+    private static boolean esFinalizada(Reserva r) {
+        return r.getEstadoReserva() != null && "FINALIZADA".equals(r.getEstadoReserva().toString());
+    }
+
+    private static boolean esNoConcretada(Reserva r) {
+        String e = estadoDe(r);
+        return e.startsWith("CANCELADA") || "NO_ASISTIO".equals(e);
+    }
+
+    private static String estadoDe(Reserva r) {
+        return r.getEstadoReserva() != null ? r.getEstadoReserva().toString() : "";
+    }
+
+    /** EN_PROCESO -> "En proceso" */
+    private static String legible(String estado) {
+        if (estado == null || estado.isBlank()) {
+            return "Sin estado";
+        }
+        String t = estado.replace('_', ' ').toLowerCase(ES);
+        return Character.toUpperCase(t.charAt(0)) + t.substring(1);
+    }
+
+    private static String nombreCliente(Reserva r) {
+        return r.getCliente() != null && r.getCliente().getPersona() != null
+                ? r.getCliente().getPersona().getNombre() : "Sin cliente";
+    }
+
+    private static String nombreBarbero(Reserva r) {
+        return r.getBarbero() != null && r.getBarbero().getPersona() != null
+                ? r.getBarbero().getPersona().getNombre() : "Sin barbero";
+    }
+
+    private static String nombreServicio(Reserva r) {
+        return r.getServicio() != null ? r.getServicio().getNombre() : "Sin servicio";
+    }
+
+    private static Map<String, List<Reserva>> agrupar(List<Reserva> lista, Function<Reserva, String> clave) {
+        return lista.stream().collect(Collectors.groupingBy(clave, LinkedHashMap::new, Collectors.toList()));
+    }
+
+    /** Convierte el total de la reserva a BigDecimal sin importar si es BigDecimal, Double, etc. */
+    private static BigDecimal monto(Object valor) {
+        if (valor == null) {
+            return BigDecimal.ZERO;
+        }
+        if (valor instanceof BigDecimal b) {
+            return b;
+        }
+        try {
+            return new BigDecimal(valor.toString());
+        } catch (NumberFormatException e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private static BigDecimal sumar(List<Reserva> lista) {
+        return lista.stream().map(r -> monto(r.getTotal())).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private static BigDecimal sumarFinalizadas(List<Reserva> lista) {
+        return sumar(lista.stream().filter(ReporteServiceImpl::esFinalizada).toList());
+    }
+
+    private static BigDecimal promedio(BigDecimal total, long cantidad) {
+        return cantidad == 0 ? BigDecimal.ZERO : total.divide(BigDecimal.valueOf(cantidad), 2, RoundingMode.HALF_UP);
+    }
+
+    private static String porcentaje(long parte, long total) {
+        return total == 0 ? "0%" : Math.round(parte * 100.0 / total) + "%";
+    }
+
+    private static String porcentajeMonto(BigDecimal parte, BigDecimal total) {
+        if (total == null || total.signum() == 0) {
+            return "0%";
+        }
+        return parte.multiply(BigDecimal.valueOf(100)).divide(total, 0, RoundingMode.HALF_UP) + "%";
+    }
+
+    /** 2003.6 -> "S/ 2,003.60" */
+    private static String soles(BigDecimal valor) {
+        DecimalFormat formato = new DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance(Locale.US));
+        return "S/ " + formato.format(valor == null ? BigDecimal.ZERO : valor);
+    }
+
+    private static String fecha(Object f) {
+        if (f == null) {
+            return "-";
+        }
+        if (f instanceof LocalDate d) {
+            return d.format(FORMATO_FECHA);
+        }
+        if (f instanceof LocalDateTime d) {
+            return d.format(FORMATO_FECHA);
+        }
+        return f.toString();
     }
 
 }
