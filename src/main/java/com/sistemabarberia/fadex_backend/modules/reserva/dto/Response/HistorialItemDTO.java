@@ -24,4 +24,5 @@ public class HistorialItemDTO {
     private String nombreServicio;    // servicio, o productos en compras
     private BigDecimal total;
     private String observacion;
+    private Long ventaId;
 }

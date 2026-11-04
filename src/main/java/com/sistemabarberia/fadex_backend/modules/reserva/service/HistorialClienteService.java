@@ -4,6 +4,7 @@ import com.sistemabarberia.fadex_backend.commons.exception.BusinessException;
 import com.sistemabarberia.fadex_backend.commons.exception.ResourceNotFoundException;
 import com.sistemabarberia.fadex_backend.modules.cliente.entity.Cliente;
 import com.sistemabarberia.fadex_backend.modules.cliente.repository.ClienteRepository;
+import com.sistemabarberia.fadex_backend.modules.pagos.repository.PagoRepository;
 import com.sistemabarberia.fadex_backend.modules.reserva.dto.Response.HistorialItemDTO;
 import com.sistemabarberia.fadex_backend.modules.reserva.entity.EstadoReserva;
 import com.sistemabarberia.fadex_backend.modules.reserva.entity.Reserva;
@@ -36,6 +37,7 @@ public class HistorialClienteService {
     private final ClienteRepository clienteRepository;
     private final ReservaRepository reservaRepository;
     private final VentaRepository ventaRepository;
+    private final PagoRepository pagoRepository;
 
     private record Entrada(LocalDateTime orden, HistorialItemDTO dto) {
     }
@@ -60,7 +62,7 @@ public class HistorialClienteService {
 
         List<Entrada> entradas = new ArrayList<>();
 
-        // ---------- RESERVAS ----------
+// ---------- RESERVAS ----------
         if (!soloCompras) {
             List<Reserva> reservas = reservaRepository
                     .findHistorialByClienteFiltros(cliente.getClienteId(), estadoReserva, desde, hasta, Pageable.unpaged())
@@ -71,6 +73,14 @@ public class HistorialClienteService {
                         ? r.getBarbero().getPersona().getNombre() + " " + r.getBarbero().getPersona().getApellido()
                         : "Sin asignar";
                 String servicio = r.getServicio() != null ? r.getServicio().getNombre() : "Sin servicio";
+
+                // Venta ligada a la reserva (solo si está finalizada y se cobró por ventas)
+                Long ventaId = null;
+                if (r.getEstadoReserva() == EstadoReserva.FINALIZADA) {
+                    ventaId = pagoRepository.findFirstByReserva_IdAndVentaIsNotNull(r.getId())
+                            .map(p -> p.getVenta().getVentaId().longValue())
+                            .orElse(null);
+                }
 
                 HistorialItemDTO dto = HistorialItemDTO.builder()
                         .tipo("RESERVA")
@@ -84,6 +94,7 @@ public class HistorialClienteService {
                         .nombreServicio(servicio)
                         .total(r.getTotal())
                         .observacion(r.getObservacion())
+                        .ventaId(ventaId)
                         .build();
 
                 LocalTime hora = r.getHoraInicio() != null ? r.getHoraInicio() : LocalTime.MIDNIGHT;

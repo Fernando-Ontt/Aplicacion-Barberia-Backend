@@ -16,4 +16,5 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
     boolean existsByVenta_VentaId(Integer ventaId);
     List<Pago> findByCliente_Persona_NombreContainingIgnoreCase(String nombre);
     Optional<Pago> findFirstByVenta_VentaId(Integer ventaId);
+    Optional<Pago> findFirstByReserva_IdAndVentaIsNotNull(Long reservaId);
 }
