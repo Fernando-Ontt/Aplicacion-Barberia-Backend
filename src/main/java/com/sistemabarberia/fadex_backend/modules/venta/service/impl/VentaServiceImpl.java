@@ -1,5 +1,6 @@
 package com.sistemabarberia.fadex_backend.modules.venta.service.impl;
 
+import com.sistemabarberia.fadex_backend.auth.usuario.Entity.Usuario;
 import com.sistemabarberia.fadex_backend.commons.exception.ResourceNotFoundException;
 import com.sistemabarberia.fadex_backend.modules.barbero.entity.Barbero;
 import com.sistemabarberia.fadex_backend.modules.barbero.repository.BarberoRepository;
@@ -321,6 +322,19 @@ public class VentaServiceImpl implements IVentaService {
     @Transactional(readOnly = true)
     public List<VentaResponseDTO> listarPorBarbero(Integer barberoId) {
         List<Venta> ventas = ventaRepository.findByBarbero_BarberoIdOrderByFechaDesc(barberoId);
+        List<VentaResponseDTO> dtoList = ventaMapper.toResponseList(ventas);
+        dtoList.forEach(dto -> {
+            pagoRepository.findFirstByVenta_VentaId(dto.getVentaId())
+                    .ifPresent(pago -> dto.setMetodoPago(pago.getMetodo()));
+        });
+        return dtoList;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VentaResponseDTO> listarMisCompras(Usuario usuario) {
+        // Usuario -> Persona -> Cliente: se buscan las ventas por el usuario autenticado
+        List<Venta> ventas = ventaRepository.findByCliente_Persona_UsuarioOrderByFechaDesc(usuario);
         List<VentaResponseDTO> dtoList = ventaMapper.toResponseList(ventas);
         dtoList.forEach(dto -> {
             pagoRepository.findFirstByVenta_VentaId(dto.getVentaId())
