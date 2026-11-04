@@ -1,9 +1,9 @@
-
 package com.sistemabarberia.fadex_backend.modules.venta.comprobante.generator;
 
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
 import com.sistemabarberia.fadex_backend.modules.pagos.repository.PagoRepository;
+import com.sistemabarberia.fadex_backend.modules.reserva.entity.Reserva;
 import com.sistemabarberia.fadex_backend.modules.venta.entity.DetalleVenta;
 import com.sistemabarberia.fadex_backend.modules.venta.entity.Venta;
 import org.springframework.core.io.ClassPathResource;
@@ -28,6 +28,12 @@ public class ComprobantePdfGenerator {
 
     private static final DateTimeFormatter FECHA_FORMATO =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private static final DateTimeFormatter SOLO_FECHA =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    private static final DateTimeFormatter SOLO_HORA =
+            DateTimeFormatter.ofPattern("HH:mm");
 
     private final SpringTemplateEngine templateEngine;
     private final PagoRepository pagoRepository;
@@ -161,6 +167,12 @@ public class ComprobantePdfGenerator {
                 ? venta.getDetalles()
                 : List.of();
 
+        // Se busca la reserva asociada una sola vez (null si es venta de tienda)
+        Reserva reserva = pagoRepository
+                .findFirstByVenta_VentaId(venta.getVentaId())
+                .map(pago -> pago.getReserva())
+                .orElse(null);
+
         for (DetalleVenta detalle : origen) {
             BigDecimal precio = detalle.getPrecioUnitario() != null
                     ? detalle.getPrecioUnitario()
@@ -173,7 +185,7 @@ public class ComprobantePdfGenerator {
             Map<String, Object> item = new HashMap<>();
 
             item.put("cantidad", cantidad);
-            item.put("descripcion", descripcion(detalle));
+            item.put("descripcion", descripcion(detalle, reserva));
             item.put("importe", formatoMonto(
                     precio.multiply(BigDecimal.valueOf(cantidad))
             ));
@@ -184,13 +196,25 @@ public class ComprobantePdfGenerator {
         return detalles;
     }
 
-    private String descripcion(DetalleVenta detalle) {
+    private String descripcion(DetalleVenta detalle, Reserva reserva) {
         if (detalle.getProducto() != null) {
             return detalle.getProducto().getNombre();
         }
 
         if (detalle.getServicio() != null) {
-            return detalle.getServicio().getNombre();
+            String nombreServicio = detalle.getServicio().getNombre();
+
+            // Si la venta vino de una reserva: servicio + fecha y hora de la cita
+            if (reserva != null
+                    && reserva.getFecha() != null
+                    && reserva.getHoraInicio() != null) {
+
+                return nombreServicio + " - "
+                        + reserva.getFecha().format(SOLO_FECHA) + " "
+                        + reserva.getHoraInicio().format(SOLO_HORA);
+            }
+
+            return nombreServicio;
         }
 
         return "Detalle de venta";

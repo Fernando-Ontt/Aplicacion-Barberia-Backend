@@ -51,11 +51,21 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.sistemabarberia.fadex_backend.modules.pagos.repository.PagoRepository;
+import com.sistemabarberia.fadex_backend.modules.venta.entity.DetalleVenta;
+import com.sistemabarberia.fadex_backend.modules.venta.entity.Venta;
+import com.sistemabarberia.fadex_backend.modules.venta.repository.VentaRepository;
+
 
 @Service
 @RequiredArgsConstructor
 public class ReporteServiceImpl implements ReporteService {
+
     private final ReservaRepository reservaRepository;
+    private final VentaRepository ventaRepository;
+    private final PagoRepository pagoRepository;
+
+    private static final DateTimeFormatter FMT_DIA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     // ─── DATOS DEL LOCAL (se muestran en la cabecera de todos los PDF)
     private static final String LOCAL_RUC       = "20612345678";
@@ -190,74 +200,101 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
 
-    // ─── PDF VENTAS
+    // ─── PDF VENTAS (lee de la tabla VENTA, igual que Gestión de Ventas)
     @Override
     public byte[] generarVentasPdf(LocalDate desde, LocalDate hasta) {
-        List<Reserva> reservas = reservaRepository.findReservasPorPeriodo(desde, hasta);
-        BigDecimal totalRepo = reservaRepository.calcularIngresosPorPeriodo(desde, hasta);
+        List<Venta> ventas = ventasDelPeriodo(desde, hasta);
+        BigDecimal total = sumarVentas(ventas);
 
-        List<Reserva> ventas = reservas.stream()
-                .filter(r -> esFinalizada(r) && r.getServicio() != null)
-                .toList();
-        BigDecimal total = totalRepo != null ? totalRepo : sumar(ventas);
+        // Ingresos por producto / servicio
+        Map<String, Integer> cantidadPorItem = new LinkedHashMap<>();
+        Map<String, BigDecimal> montoPorItem = new LinkedHashMap<>();
+        for (Venta v : ventas) {
+            if (v.getDetalles() == null) continue;
+            for (DetalleVenta d : v.getDetalles()) {
+                String nombre = nombreItem(d);
+                int cant = d.getCantidad() != null ? d.getCantidad() : 0;
+                BigDecimal precio = d.getPrecioUnitario() != null ? d.getPrecioUnitario() : BigDecimal.ZERO;
+                cantidadPorItem.merge(nombre, cant, Integer::sum);
+                montoPorItem.merge(nombre, precio.multiply(BigDecimal.valueOf(cant)), BigDecimal::add);
+            }
+        }
 
-        Map<String, List<Reserva>> porServicio = agrupar(ventas, ReporteServiceImpl::nombreServicio);
-        Map.Entry<String, List<Reserva>> top = porServicio.entrySet().stream()
-                .max((a, b) -> Integer.compare(a.getValue().size(), b.getValue().size()))
+        Map.Entry<String, Integer> top = cantidadPorItem.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
                 .orElse(null);
 
         List<Kpi> kpis = List.of(
                 new Kpi("Total ingresos", soles(total), "periodo seleccionado"),
-                new Kpi("Servicios realizados", String.valueOf(ventas.size()), "reservas finalizadas"),
-                new Kpi("Ticket promedio", soles(promedio(total, ventas.size())), "por servicio"),
-                new Kpi("Servicio más vendido", top != null ? top.getKey() : "-",
-                        top != null ? top.getValue().size() + " veces" : "sin ventas")
+                new Kpi("Ventas realizadas", String.valueOf(ventas.size()), "en el periodo"),
+                new Kpi("Ticket promedio", soles(promedio(total, ventas.size())), "por venta"),
+                new Kpi("Más vendido", top != null ? top.getKey() : "-",
+                        top != null ? top.getValue() + " unidades" : "sin ventas")
         );
 
-        List<String[]> ingresosPorServicio = porServicio.entrySet().stream()
-                .sorted((a, b) -> sumar(b.getValue()).compareTo(sumar(a.getValue())))
-                .map(e -> {
-                    BigDecimal monto = sumar(e.getValue());
-                    return new String[]{e.getKey(), String.valueOf(e.getValue().size()),
-                            soles(monto), porcentajeMonto(monto, total)};
-                })
+        List<String[]> ingresosPorItem = montoPorItem.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .map(e -> new String[]{
+                        e.getKey(),
+                        String.valueOf(cantidadPorItem.get(e.getKey())),
+                        soles(e.getValue())})
                 .toList();
 
-        Map<String, List<Reserva>> porDia = ventas.stream().collect(
-                Collectors.groupingBy(r -> String.valueOf(r.getFecha()), TreeMap::new, Collectors.toList()));
-        List<String[]> ingresosPorDia = porDia.values().stream()
-                .map(lista -> new String[]{fecha(lista.get(0).getFecha()),
-                        String.valueOf(lista.size()), soles(sumar(lista))})
+        // Ingresos por método de pago
+// Ingresos por método de pago
+        Map<String, List<Venta>> porMetodo = ventas.stream()
+                .collect(Collectors.groupingBy(this::metodoDe, TreeMap::new, Collectors.toList()));
+        List<String[]> ingresosPorMetodo = porMetodo.entrySet().stream()
+                .map(e -> new String[]{
+                        e.getKey(),
+                        String.valueOf(e.getValue().size()),
+                        soles(sumarVentas(e.getValue()))})
+                .toList();
+
+        // Ingresos por día
+        Map<LocalDate, List<Venta>> porDia = ventas.stream()
+                .collect(Collectors.groupingBy(v -> v.getFecha().toLocalDate(), TreeMap::new, Collectors.toList()));
+        List<String[]> ingresosPorDia = porDia.entrySet().stream()
+                .map(e -> new String[]{e.getKey().format(FMT_DIA),
+                        String.valueOf(e.getValue().size()), soles(sumarVentas(e.getValue()))})
                 .toList();
 
         List<Bloque> resumenes = List.of(
-                new Bloque("Ingresos por servicio", new String[]{"Servicio", "Cant.", "Ingresos", "% del total"}, ingresosPorServicio),
-                new Bloque("Ingresos por día", new String[]{"Fecha", "Servicios", "Ingresos"}, ingresosPorDia)
+                new Bloque("Ingresos por producto / servicio",
+                        new String[]{"Producto / Servicio", "Cant.", "Ingresos"}, ingresosPorItem),
+                new Bloque("Ingresos por método de pago",
+                        new String[]{"Método", "Ventas", "Ingresos"}, ingresosPorMetodo),
+                new Bloque("Ingresos por día",
+                        new String[]{"Fecha", "Ventas", "Ingresos"}, ingresosPorDia)
         );
 
         List<Columna> columnas = List.of(
-                new Columna("Fecha", 1.6f, false),
-                new Columna("Servicio", 3.0f, false),
-                new Columna("Estado", 2.0f, false),
-                new Columna("Total", 1.6f, true)
+                new Columna("Fecha", 1.5f, false),
+                new Columna("N° venta", 2.2f, false),
+                new Columna("Cliente", 2.2f, false),
+                new Columna("Comprobante", 2.0f, false),
+                new Columna("Pago", 1.4f, false),
+                new Columna("Total", 1.4f, true)
         );
 
-        List<String[]> filas = ventas.stream().map(r -> new String[]{
-                fecha(r.getFecha()),
-                nombreServicio(r),
-                legible(estadoDe(r)),
-                soles(monto(r.getTotal()))
+        List<String[]> filas = ventas.stream().map(v -> new String[]{
+                v.getFecha().toLocalDate().format(FMT_DIA),
+                v.getNumeroCorrelativo() != null ? v.getNumeroCorrelativo() : "-",
+                nombreClienteVenta(v),
+                v.getSerieComprobante() + "-" + v.getNumeroComprobante(),
+                metodoDe(v),
+                soles(monto(v.getTotal()))
         }).toList();
 
         return construirPdf("Ventas e Ingresos", desde, hasta, kpis, resumenes, columnas, filas,
                 "Total ingresos", soles(total),
-                "Solo se consideran las reservas finalizadas con servicio registrado.");
+                "Se consideran todas las ventas del periodo (productos y servicios).");
     }
 
     // ─── EXCEL VENTAS
     @Override
     public byte[] generarVentasExcel(LocalDate desde, LocalDate hasta) {
-        List<Reserva> reservas = reservaRepository.findReservasPorPeriodo(desde, hasta);
+        List<Venta> ventas = ventasDelPeriodo(desde, hasta);
         try (XSSFWorkbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
@@ -268,7 +305,7 @@ public class ReporteServiceImpl implements ReporteService {
             XSSFCellStyle filaImparStyle = crearEstiloFilaImpar(workbook);
 
             Row header = sheet.createRow(0);
-            String[] cols = {"Fecha", "Servicio", "Estado", "Total"};
+            String[] cols = {"Fecha", "N° venta", "Cliente", "Comprobante", "Método de pago", "Total"};
             for (int i = 0; i < cols.length; i++) {
                 org.apache.poi.ss.usermodel.Cell cell = header.createCell(i);
                 cell.setCellValue(cols[i]);
@@ -277,16 +314,16 @@ public class ReporteServiceImpl implements ReporteService {
             }
 
             int rowNum = 1;
-            for (Reserva r : reservas) {
-                if (r.getEstadoReserva() != null && "FINALIZADA".equals(r.getEstadoReserva().toString()) && r.getServicio() != null) {
-                    Row row = sheet.createRow(rowNum);
-                    XSSFCellStyle estilo = (rowNum % 2 == 0) ? filaParStyle : filaImparStyle;
-                    setCellStyled(row, 0, r.getFecha().toString(), estilo);
-                    setCellStyled(row, 1, r.getServicio().getNombre(), estilo);
-                    setCellStyled(row, 2, r.getEstadoReserva().toString(), estilo);
-                    setCellStyled(row, 3, "S/ " + r.getTotal(), estilo);
-                    rowNum++;
-                }
+            for (Venta v : ventas) {
+                Row row = sheet.createRow(rowNum);
+                XSSFCellStyle estilo = (rowNum % 2 == 0) ? filaParStyle : filaImparStyle;
+                setCellStyled(row, 0, v.getFecha().toLocalDate().format(FMT_DIA), estilo);
+                setCellStyled(row, 1, v.getNumeroCorrelativo() != null ? v.getNumeroCorrelativo() : "-", estilo);
+                setCellStyled(row, 2, nombreClienteVenta(v), estilo);
+                setCellStyled(row, 3, v.getSerieComprobante() + "-" + v.getNumeroComprobante(), estilo);
+                setCellStyled(row, 4, metodoDe(v), estilo);
+                setCellStyled(row, 5, "S/ " + monto(v.getTotal()), estilo);
+                rowNum++;
             }
 
             workbook.write(out);
@@ -500,6 +537,44 @@ public class ReporteServiceImpl implements ReporteService {
         }
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  HELPERS DEL REPORTE DE VENTAS
+    // ══════════════════════════════════════════════════════════════════
+
+    private List<Venta> ventasDelPeriodo(LocalDate desde, LocalDate hasta) {
+        return ventaRepository.buscarParaReporte(
+                desde.atStartOfDay(),
+                hasta.plusDays(1).atStartOfDay());
+    }
+
+    private BigDecimal sumarVentas(List<Venta> ventas) {
+        return ventas.stream()
+                .map(v -> monto(v.getTotal()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private String nombreItem(DetalleVenta d) {
+        if (d.getProducto() != null) return d.getProducto().getNombre();
+        if (d.getServicio() != null) return d.getServicio().getNombre();
+        return "Otros";
+    }
+
+    private String metodoDe(Venta v) {
+        return pagoRepository.findFirstByVenta_VentaId(v.getVentaId())
+                .map(p -> p.getMetodo() != null ? p.getMetodo().name() : "Sin registrar")
+                .orElse("Sin registrar");
+    }
+
+    private String nombreClienteVenta(Venta v) {
+        if (v.getCliente() == null || v.getCliente().getPersona() == null) return "Cliente general";
+        var p = v.getCliente().getPersona();
+        return ((p.getNombre() != null ? p.getNombre() : "") + " "
+                + (p.getApellido() != null ? p.getApellido() : "")).trim();
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  ESTILOS EXCEL
+    // ══════════════════════════════════════════════════════════════════
 
     private XSSFCellStyle crearEstiloHeader(XSSFWorkbook wb) {
         XSSFCellStyle style = wb.createCellStyle();
