@@ -154,7 +154,17 @@ public class SecurityConfig {
                                 "/api/v1/servicio/**"
                         ).hasRole("cliente")
 
-                        // ─────────────────────────────────────────────
+                                // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// CHECKOUT (solo cliente)
+// ─────────────────────────────────────────────
+                                .requestMatchers(HttpMethod.POST, "/api/v1/checkout")
+                                .hasRole("cliente")
+                                .requestMatchers(HttpMethod.GET, "/api/v1/historial").hasRole("cliente")
+                                .requestMatchers(HttpMethod.GET, "/api/v1/historial/compras/*/comprobante/pdf").hasRole("cliente")
+                                .requestMatchers(HttpMethod.POST, "/api/v1/checkout")
+                                .hasRole("cliente")
+                                .requestMatchers(HttpMethod.POST, "/api/v1/checkout/reserva").hasRole("cliente")
                         // RESERVAS
                         // ─────────────────────────────────────────────
                         .requestMatchers(HttpMethod.POST,
