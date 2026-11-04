@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
@@ -274,7 +273,9 @@
 
       <tr class="item" th:each="d : ${venta.detalles}">
         <td th:text="${d.cantidad}">_</td>
-        <td th:text="${d.descripcion}">______________</td>
+        <td style="word-break: break-word; overflow-wrap: anywhere; white-space: normal;">
+          <span th:text="${d.descripcion}">______________</span>
+        </td>
         <td class="num" th:text="${d.importe}">____</td>
       </tr>
     </table>

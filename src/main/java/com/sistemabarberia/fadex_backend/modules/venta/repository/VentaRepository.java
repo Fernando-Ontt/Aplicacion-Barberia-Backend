@@ -91,4 +91,17 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
 
     @EntityGraph(attributePaths = {"detalles", "detalles.producto", "detalles.servicio"})
     List<Venta> findByCliente_Persona_UsuarioOrderByFechaDesc(Usuario usuario);
+    @EntityGraph(attributePaths = {
+            "detalles", "detalles.producto", "detalles.servicio",
+            "cliente", "cliente.persona"
+    })
+    @Query("""
+    SELECT v FROM Venta v
+    WHERE v.fecha >= :inicio AND v.fecha < :finExclusivo
+    ORDER BY v.fecha ASC
+""")
+    List<Venta> buscarParaReporte(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("finExclusivo") LocalDateTime finExclusivo
+    );
 }
