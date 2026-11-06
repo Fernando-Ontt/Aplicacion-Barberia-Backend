@@ -101,7 +101,7 @@ public class ComprobantePdfGenerator {
         Map<String, String> local = new HashMap<>();
 
         local.put("ruc", "20612345678");
-        local.put("direccion", "Estación Bayóvar, San Juan de Lurigancho, Lima");
+        local.put("direccion", "Av. de la Marina 2274, San Miguel 15088, Perú");
         local.put("telefono", "954 321 876");
 
         // Página web
